@@ -1,0 +1,61 @@
+services:
+  # AWS Cloud emulation (S3, SQS, SNS, DynamoDB)
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs,sns,dynamodb
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./.localstack:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - insure-network
+
+  # Main relational database
+  postgres:
+    image: postgres:16-alpine
+    container_name: insure-db
+    environment:
+      POSTGRES_DB: insure_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    networks:
+      - insure-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d insure_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Cache and fast storage for Quote Engine
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - insure-network
+
+  # Search and Analytics Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200"
+    networks:
+      - insure-network
+    deploy:
+      resources:
+        limits:
+          memory: 2gb
+
+networks:
+  insure-network:
+    driver: bridge
