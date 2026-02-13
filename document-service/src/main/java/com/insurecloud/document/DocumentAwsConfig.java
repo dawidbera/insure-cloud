@@ -1,19 +1,19 @@
-package com.insurecloud.policy;
+package com.insurecloud.document;
 
-import io.awspring.cloud.sns.core.SnsTemplate;
+import io.awspring.cloud.s3.S3Template;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.sns.SnsClient;
-import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.net.URI;
 
 @Configuration
-public class AwsConfig {
+public class DocumentAwsConfig {
 
     @Value("${spring.cloud.aws.endpoint:http://localhost:4566}")
     private String awsEndpoint;
@@ -21,8 +21,8 @@ public class AwsConfig {
     private static final Region REGION = Region.US_EAST_1;
 
     @Bean
-    public SqsClient sqsClient() {
-        return SqsClient.builder()
+    public SqsAsyncClient sqsAsyncClient() {
+        return SqsAsyncClient.builder()
                 .endpointOverride(URI.create(awsEndpoint))
                 .region(REGION)
                 .credentialsProvider(StaticCredentialsProvider.create(
@@ -31,17 +31,13 @@ public class AwsConfig {
     }
 
     @Bean
-    public SnsClient snsClient() {
-        return SnsClient.builder()
+    public S3Client s3Client() {
+        return S3Client.builder()
                 .endpointOverride(URI.create(awsEndpoint))
                 .region(REGION)
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("test", "test")))
+                .forcePathStyle(true)
                 .build();
-    }
-
-    @Bean
-    public SnsTemplate snsTemplate(SnsClient snsClient) {
-        return new SnsTemplate(snsClient);
     }
 }

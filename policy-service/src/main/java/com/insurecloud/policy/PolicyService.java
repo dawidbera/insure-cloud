@@ -1,10 +1,10 @@
 package com.insurecloud.policy;
 
+import io.awspring.cloud.sns.core.SnsTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import software.amazon.awssdk.services.sns.SnsClient;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import java.util.List;
 public class PolicyService {
 
     private final PolicyRepository policyRepository;
-    private final SnsClient snsClient;
+    private final SnsTemplate snsTemplate;
 
     @Transactional
     public Policy createPolicy(Policy policy) {
@@ -33,13 +33,17 @@ public class PolicyService {
 
     private void publishPolicyIssuedEvent(Policy policy) {
         try {
-            String message = "Policy issued: " + policy.getPolicyNumber() + " for ID: " + policy.getId();
-            log.info("Publishing policy issued event to SNS: {}", message);
+            PolicyIssuedEvent event = new PolicyIssuedEvent(
+                    policy.getId(),
+                    policy.getPolicyNumber(),
+                    policy.getCustomerId(),
+                    policy.getPremiumAmount()
+            );
             
-            // In a real implementation, we would publish to a specific Topic ARN
-            // For now, we just log it to verify the SnsClient bean is correctly injected
+            log.info("Publishing policy issued event to SNS: {}", event);
+            snsTemplate.sendNotification("policy-issued-topic", event, "PolicyIssued");
         } catch (Exception e) {
-            log.error("Failed to process SNS event", e);
+            log.error("Failed to publish SNS event", e);
         }
     }
 }
