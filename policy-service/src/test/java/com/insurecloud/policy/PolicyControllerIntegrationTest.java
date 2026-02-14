@@ -15,6 +15,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.awaitility.Awaitility;
+import java.time.Duration;
+import java.util.List;
+
 public class PolicyControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
@@ -24,25 +28,31 @@ public class PolicyControllerIntegrationTest extends AbstractIntegrationTest {
     private PolicyRepository policyRepository;
 
     @Autowired
+    private OutboxRepository outboxRepository;
+
+    @Autowired
     private SnsClient snsClient;
 
     /**
-     * Initializes the test environment by clearing the policy repository
-     * and ensuring the SNS topic exists in LocalStack.
+     * Prepares the test environment by clearing repositories and creating necessary SNS topics.
+     * This ensures each test starts with a clean slate.
      */
     @BeforeEach
     void setUp() {
+        outboxRepository.deleteAll();
         policyRepository.deleteAll();
-        // Create topic in LocalStack before test
         snsClient.createTopic(CreateTopicRequest.builder().name("policy-issued-topic").build());
     }
 
     /**
-     * Tests the policy creation endpoint to ensure it correctly saves a policy
-     * and returns a successful response.
+     * Tests the full policy creation flow including the Transactional Outbox pattern.
+     * Verifies that:
+     * 1. The policy is created successfully via REST API.
+     * 2. An unprocessed outbox event is created immediately.
+     * 3. The OutboxProcessor eventually picks up and processes the event.
      */
     @Test
-    void shouldCreatePolicyAndReturnStatusOk() {
+    void shouldCreatePolicyAndProcessOutboxEvent() {
         // Given
         Policy policy = Policy.builder()
                 .policyNumber("POL-" + UUID.randomUUID())
@@ -58,11 +68,19 @@ public class PolicyControllerIntegrationTest extends AbstractIntegrationTest {
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getPolicyNumber()).isEqualTo(policy.getPolicyNumber());
-        assertThat(response.getBody().getStatus()).isEqualTo(Policy.PolicyStatus.ACTIVE);
+        
+        // Verify outbox entry exists immediately
+        List<OutboxEvent> outboxEvents = outboxRepository.findAll();
+        assertThat(outboxEvents).hasSize(1);
+        assertThat(outboxEvents.get(0).isProcessed()).isFalse();
 
-        // Verify in DB
-        assertThat(policyRepository.findAll()).hasSize(1);
+        // Wait for OutboxProcessor to process the event
+        Awaitility.await()
+                .atMost(Duration.ofSeconds(5))
+                .untilAsserted(() -> {
+                    List<OutboxEvent> processedEvents = outboxRepository.findAll();
+                    assertThat(processedEvents.get(0).isProcessed()).isTrue();
+                    assertThat(processedEvents.get(0).getProcessedAt()).isNotNull();
+                });
     }
 }

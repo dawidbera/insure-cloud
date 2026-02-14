@@ -1,11 +1,12 @@
 package com.insurecloud.policy;
 
-import io.awspring.cloud.sns.core.SnsTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -14,14 +15,16 @@ import java.util.List;
 public class PolicyService {
 
     private final PolicyRepository policyRepository;
-    private final SnsTemplate snsTemplate;
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
 
     /**
-     * Creates a new insurance policy, sets its status to ACTIVE, saves it to the repository,
-     * and triggers a policy issued event.
+     * Creates a new insurance policy, saves it to the database, and records an outbox event.
+     * All operations are performed within a single transaction to ensure consistency.
      *
      * @param policy The policy object to be created.
-     * @return The created policy with its generated ID and status.
+     * @return The created policy with generated ID and ACTIVE status.
+     * @throws RuntimeException if saving the outbox event fails.
      */
     @Transactional
     public Policy createPolicy(Policy policy) {
@@ -29,7 +32,7 @@ public class PolicyService {
         policy.setStatus(Policy.PolicyStatus.ACTIVE);
         Policy savedPolicy = policyRepository.save(policy);
         
-        publishPolicyIssuedEvent(savedPolicy);
+        saveOutboxEvent(savedPolicy);
         
         return savedPolicy;
     }
@@ -44,11 +47,11 @@ public class PolicyService {
     }
 
     /**
-     * Publishes a PolicyIssuedEvent to the SNS topic for downstream services.
+     * Serializes the policy issued event and saves it to the outbox table.
      *
-     * @param policy The policy for which to publish the event.
+     * @param policy The policy for which the event is being recorded.
      */
-    private void publishPolicyIssuedEvent(Policy policy) {
+    private void saveOutboxEvent(Policy policy) {
         try {
             PolicyIssuedEvent event = new PolicyIssuedEvent(
                     policy.getId(),
@@ -56,11 +59,20 @@ public class PolicyService {
                     policy.getCustomerId(),
                     policy.getPremiumAmount()
             );
-            
-            log.info("Publishing policy issued event to SNS: {}", event);
-            snsTemplate.sendNotification("policy-issued-topic", event, "PolicyIssued");
+
+            OutboxEvent outboxEvent = OutboxEvent.builder()
+                    .aggregateId(policy.getId().toString())
+                    .aggregateType("POLICY")
+                    .eventType("PolicyIssued")
+                    .payload(objectMapper.writeValueAsString(event))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            outboxRepository.save(outboxEvent);
+            log.info("Recorded outbox event for policy: {}", policy.getId());
         } catch (Exception e) {
-            log.error("Failed to publish SNS event", e);
+            log.error("Failed to record outbox event", e);
+            throw new RuntimeException("Event persistence failed", e);
         }
     }
 }

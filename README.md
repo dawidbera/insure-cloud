@@ -33,10 +33,14 @@ graph TD
     API_Quote -->|3. Return Quote| Client
     
     Client -->|4. Buy Policy| API_Policy[Policy Service]
-    API_Policy -->|5. Save Policy| DB_Postgres[(PostgreSQL)]
-    API_Policy -->|6. Publish 'PolicyIssued'| SNS[AWS SNS]
+    API_Policy -->|5. Save Policy + Outbox| DB_Postgres[(PostgreSQL)]
     
-    SNS -->|7. Fan-out| SQS_Notif[SQS: notification-queue]
+    subgraph Transactional Outbox
+        DB_Postgres -.->|6. Polling| OutboxProc[Outbox Processor]
+        OutboxProc -->|7. Publish| SNS[AWS SNS]
+    end
+    
+    SNS -->|8. Fan-out| SQS_Notif[SQS: notification-queue]
     SNS -->|7. Fan-out| SQS_Doc[SQS: document-queue]
     SNS -->|7. Fan-out| SQS_Search[SQS: search-queue]
     

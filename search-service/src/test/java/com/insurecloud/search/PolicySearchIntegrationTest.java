@@ -33,12 +33,22 @@ public class PolicySearchIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private PolicySearchRepository policySearchRepository;
 
+    /**
+     * Prepares the test environment before each test case.
+     * Clears the Elasticsearch index and ensures the SQS queue exists.
+     */
     @BeforeEach
     void setUp() {
         policySearchRepository.deleteAll();
         sqsAsyncClient.createQueue(builder -> builder.queueName("search-queue")).join();
     }
 
+    /**
+     * Verifies the end-to-end flow of policy indexing and searching.
+     * 1. Sends a PolicyIssuedEvent to SQS.
+     * 2. Waits for the event to be indexed in Elasticsearch.
+     * 3. Verifies retrieval via the REST API.
+     */
     @Test
     void shouldIndexAndSearchPolicy() {
         // Given
