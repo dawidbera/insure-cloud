@@ -13,6 +13,13 @@ import java.util.UUID;
 @Slf4j
 public class QuoteService {
 
+    /**
+     * Calculates an insurance premium quote based on the product code, customer age, and asset value.
+     * Uses a base rate and age-based multiplier for the calculation. Results are cached.
+     *
+     * @param request The quote request details.
+     * @return A QuoteResponse containing the unique quote ID, calculated premium, and expiry date.
+     */
     @Cacheable(value = "quotes", key = "#request.productCode + #request.customerAge + #request.assetValue")
     public QuoteResponse calculateQuote(QuoteRequest request) {
         log.info("Calculating premium for product: {} and age: {}", request.getProductCode(), request.getCustomerAge());

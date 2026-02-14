@@ -16,6 +16,13 @@ public class PolicyService {
     private final PolicyRepository policyRepository;
     private final SnsTemplate snsTemplate;
 
+    /**
+     * Creates a new insurance policy, sets its status to ACTIVE, saves it to the repository,
+     * and triggers a policy issued event.
+     *
+     * @param policy The policy object to be created.
+     * @return The created policy with its generated ID and status.
+     */
     @Transactional
     public Policy createPolicy(Policy policy) {
         log.info("Creating new policy for customer: {}", policy.getCustomerId());
@@ -27,10 +34,20 @@ public class PolicyService {
         return savedPolicy;
     }
 
+    /**
+     * Retrieves all insurance policies from the repository.
+     *
+     * @return A list of all existing policies.
+     */
     public List<Policy> getAllPolicies() {
         return policyRepository.findAll();
     }
 
+    /**
+     * Publishes a PolicyIssuedEvent to the SNS topic for downstream services.
+     *
+     * @param policy The policy for which to publish the event.
+     */
     private void publishPolicyIssuedEvent(Policy policy) {
         try {
             PolicyIssuedEvent event = new PolicyIssuedEvent(

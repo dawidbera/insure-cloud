@@ -18,6 +18,11 @@ public class NotificationAwsConfig {
 
     private static final Region REGION = Region.US_EAST_1;
 
+    /**
+     * Configures the asynchronous SQS client with endpoint override and static credentials.
+     *
+     * @return A configured SqsAsyncClient bean.
+     */
     @Bean
     public SqsAsyncClient sqsAsyncClient() {
         return SqsAsyncClient.builder()

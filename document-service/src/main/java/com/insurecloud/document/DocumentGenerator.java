@@ -12,6 +12,12 @@ import java.io.InputStream;
 @Service
 public class DocumentGenerator {
 
+    /**
+     * Generates a PDF document for an insurance policy using the provided event details.
+     *
+     * @param event The policy issued event containing the data for the document.
+     * @return An InputStream containing the generated PDF content.
+     */
     public InputStream generatePolicyPdf(PolicyIssuedEvent event) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document document = new Document();

@@ -20,6 +20,11 @@ public class DocumentAwsConfig {
 
     private static final Region REGION = Region.US_EAST_1;
 
+    /**
+     * Configures the asynchronous SQS client with endpoint override and static credentials.
+     *
+     * @return A configured SqsAsyncClient bean.
+     */
     @Bean
     public SqsAsyncClient sqsAsyncClient() {
         return SqsAsyncClient.builder()
@@ -30,6 +35,11 @@ public class DocumentAwsConfig {
                 .build();
     }
 
+    /**
+     * Configures the S3 client with endpoint override, static credentials, and path-style access.
+     *
+     * @return A configured S3Client bean.
+     */
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()

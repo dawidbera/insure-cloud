@@ -20,6 +20,11 @@ public class AwsConfig {
 
     private static final Region REGION = Region.US_EAST_1;
 
+    /**
+     * Configures the SQS client with endpoint override and static credentials.
+     *
+     * @return A configured SqsClient bean.
+     */
     @Bean
     public SqsClient sqsClient() {
         return SqsClient.builder()
@@ -30,6 +35,11 @@ public class AwsConfig {
                 .build();
     }
 
+    /**
+     * Configures the SNS client with endpoint override and static credentials.
+     *
+     * @return A configured SnsClient bean.
+     */
     @Bean
     public SnsClient snsClient() {
         return SnsClient.builder()
@@ -40,6 +50,12 @@ public class AwsConfig {
                 .build();
     }
 
+    /**
+     * Creates an SnsTemplate bean for simplified SNS operations.
+     *
+     * @param snsClient The SnsClient to be used by the template.
+     * @return A new SnsTemplate.
+     */
     @Bean
     public SnsTemplate snsTemplate(SnsClient snsClient) {
         return new SnsTemplate(snsClient);
