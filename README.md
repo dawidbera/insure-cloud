@@ -23,6 +23,7 @@ The system consists of several autonomous microservices:
 - **Quote Engine:** Calculates premiums based on risk factors.
 - **Notification Service:** Handles asynchronous communication with customers.
 - **Document Service:** Generates and stores PDF policy documents.
+- **Search Service:** Provides high-speed policy searching and analytics using Elasticsearch.
 
 ### System Flow Diagram
 ```mermaid
@@ -37,6 +38,7 @@ graph TD
     
     SNS -->|7. Fan-out| SQS_Notif[SQS: notification-queue]
     SNS -->|7. Fan-out| SQS_Doc[SQS: document-queue]
+    SNS -->|7. Fan-out| SQS_Search[SQS: search-queue]
     
     SQS_Notif -->|8. Consume| Service_Notif[Notification Service]
     Service_Notif -->|9. Send Email| Email[SMTP Mock]
@@ -44,6 +46,9 @@ graph TD
     SQS_Doc -->|8. Consume| Service_Doc[Document Service]
     Service_Doc -->|9. Generate PDF| PDF[PDF Generator]
     Service_Doc -->|10. Upload PDF| S3[AWS S3]
+
+    SQS_Search -->|8. Consume| Service_Search[Search Service]
+    Service_Search -->|9. Index Document| ES[(Elasticsearch)]
 ```
 
 ## 🚦 Getting Started
@@ -68,6 +73,10 @@ mvn spring-boot:run
 ## 📈 API Documentation
 Once the services are running, you can access the Swagger UI:
 - Policy Service: `http://localhost:8081/swagger-ui.html`
+- Quote Service: `http://localhost:8082/swagger-ui.html`
+- Notification Service: `http://localhost:8083/swagger-ui.html`
+- Document Service: `http://localhost:8084/swagger-ui.html`
+- Search Service: `http://localhost:8085/swagger-ui.html`
 
 ## 📝 License
 This project is licensed under the MIT License.

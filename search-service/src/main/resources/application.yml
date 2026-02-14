@@ -1,0 +1,28 @@
+# Search Service Configuration
+spring:
+  application:
+    name: search-service
+  
+  # Elasticsearch configuration
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+  
+  # AWS configuration for SQS
+  cloud:
+    aws:
+      sqs:
+        endpoint: ${AWS_ENDPOINT:http://localhost:4566}
+      region:
+        static: ${AWS_REGION:us-east-1}
+      credentials:
+        access-key: test
+        secret-key: test
+
+server:
+  port: 8085
+
+# Logging configuration
+logging:
+  level:
+    com.insurecloud.search: DEBUG
+    org.springframework.data.elasticsearch: INFO
