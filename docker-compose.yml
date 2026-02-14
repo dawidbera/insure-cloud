@@ -57,6 +57,89 @@ services:
         limits:
           memory: 2gb
 
+  policy-service:
+    build:
+      context: .
+      dockerfile: policy-service/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/insure_db
+      - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_started
+    networks:
+      - insure-network
+
+  quote-service:
+    build:
+      context: .
+      dockerfile: quote-service/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+    depends_on:
+      - redis
+    networks:
+      - insure-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      - localstack
+    networks:
+      - insure-network
+
+  document-service:
+    build:
+      context: .
+      dockerfile: document-service/Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      - localstack
+    networks:
+      - insure-network
+
+  search-service:
+    build:
+      context: .
+      dockerfile: search-service/Dockerfile
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    depends_on:
+      - localstack
+      - elasticsearch
+    networks:
+      - insure-network
+
 networks:
   insure-network:
     driver: bridge
