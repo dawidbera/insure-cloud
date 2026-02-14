@@ -1,6 +1,9 @@
 spring:
   application:
     name: policy-service
+  threads:
+    virtual:
+      enabled: true
   datasource:
     url: jdbc:postgresql://localhost:5432/insure_db
     username: user

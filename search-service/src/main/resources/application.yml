@@ -2,6 +2,9 @@
 spring:
   application:
     name: search-service
+  threads:
+    virtual:
+      enabled: true
   
   # Elasticsearch configuration
   elasticsearch:

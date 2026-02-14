@@ -1,6 +1,9 @@
 spring:
   application:
     name: quote-service
+  threads:
+    virtual:
+      enabled: true
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}

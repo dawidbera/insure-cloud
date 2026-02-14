@@ -4,3 +4,6 @@ server:
 spring:
   application:
     name: notification-service
+  threads:
+    virtual:
+      enabled: true

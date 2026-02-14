@@ -8,10 +8,11 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 
 ## 🛠 Tech Stack
 
-- **Languages:** Java 21
+- **Languages:** Java 21 (with **Virtual Threads** enabled)
 - **Framework:** Spring Boot 3.4
 - **Persistence:** PostgreSQL, DynamoDB, Redis
 - **Infrastructure:** Docker Compose, LocalStack (S3, SQS, SNS)
+- **API Gateway:** Spring Cloud Gateway (Planned)
 - **Search:** Elasticsearch
 - **Testing:** JUnit 5, Mockito, Testcontainers
 - **API:** OpenAPI (Swagger)
