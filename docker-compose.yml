@@ -11,7 +11,18 @@ services:
     volumes:
       - "./.localstack:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "./init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
+    networks:
+      - insure-network
+
+  terraform-init:
+    image: hashicorp/terraform:latest
+    volumes:
+      - "./terraform:/app"
+    working_dir: /app
+    depends_on:
+      localstack:
+        condition: service_started
+    entrypoint: /bin/sh -c "terraform init && terraform apply -auto-approve"
     networks:
       - insure-network
 

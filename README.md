@@ -76,6 +76,7 @@ docker compose up -d --build
 
 This will start:
 - **Infrastructure:** LocalStack (S3, SQS, SNS), PostgreSQL, Redis, Elasticsearch.
+- **Infrastructure as Code:** A Terraform container automatically initializes all required AWS resources (queues, topics, and buckets) on startup.
 - **Microservices:** Policy, Quote, Notification, Document, and Search services.
 
 ### Verification
