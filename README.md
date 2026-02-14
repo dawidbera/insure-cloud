@@ -62,16 +62,42 @@ graph TD
 - JDK 21
 - Maven 3.9+
 
-### Running Infrastructure
-To start the local cloud environment (Postgres, LocalStack, etc.):
+### Building the Project
+Build all microservices at once from the root directory:
 ```bash
-docker compose up -d
+mvn clean package -DskipTests
 ```
 
-### Running Services
-Navigate to a service directory and run:
+### Running the Entire System
+You can launch the full environment (Infrastructure + Microservices) with a single command:
 ```bash
-mvn spring-boot:run
+docker compose up -d --build
+```
+
+This will start:
+- **Infrastructure:** LocalStack (S3, SQS, SNS), PostgreSQL, Redis, Elasticsearch.
+- **Microservices:** Policy, Quote, Notification, Document, and Search services.
+
+### Verification
+Test the end-to-end flow using the following commands:
+
+1. **Calculate a Quote:**
+```bash
+curl -X POST http://localhost:8082/api/quotes \
+  -H "Content-Type: application/json" \
+  -d '{"productCode": "CAR", "customerAge": 25, "assetValue": 50000}'
+```
+
+2. **Issue a Policy:**
+```bash
+curl -X POST http://localhost:8081/api/policies \
+  -H "Content-Type: application/json" \
+  -d '{"policyNumber": "POL-123", "customerId": "CUST-001", "premiumAmount": 500.00, "startDate": "2026-02-14", "endDate": "2027-02-14"}'
+```
+
+3. **Check Search Index:**
+```bash
+curl http://localhost:8085/api/search/by-number?policyNumber=POL-123
 ```
 
 ## 📈 API Documentation

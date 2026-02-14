@@ -14,7 +14,7 @@ import java.net.URI;
 @Configuration
 public class SearchAwsConfig {
 
-    @Value("${spring.cloud.aws.sqs.endpoint:http://localhost:4566}")
+    @Value("${spring.cloud.aws.endpoint:http://localhost:4566}")
     private String awsEndpoint;
 
     @Value("${spring.cloud.aws.region.static:us-east-1}")
