@@ -76,6 +76,12 @@
 			<groupId>io.awspring.cloud</groupId>
 			<artifactId>spring-cloud-aws-starter-sns</artifactId>
 		</dependency>
+
+		<!-- Discovery -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

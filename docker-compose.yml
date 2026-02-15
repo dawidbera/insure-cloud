@@ -68,6 +68,15 @@ services:
         limits:
           memory: 2gb
 
+  discovery-service:
+    build:
+      context: .
+      dockerfile: discovery-service/Dockerfile
+    ports:
+      - "8761:8761"
+    networks:
+      - insure-network
+
   policy-service:
     build:
       context: .
@@ -80,6 +89,7 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,6 +106,7 @@ services:
       - "8082:8082"
     environment:
       - SPRING_DATA_REDIS_HOST=redis
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
     depends_on:
       - redis
     networks:
@@ -112,6 +123,7 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
     depends_on:
       - localstack
     networks:
@@ -128,6 +140,7 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
     depends_on:
       - localstack
     networks:
@@ -145,6 +158,7 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
     depends_on:
       - localstack
       - elasticsearch
