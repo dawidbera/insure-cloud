@@ -25,8 +25,9 @@ public class SecurityConfig {
         http
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .authorizeExchange(exchanges -> exchanges
-                .pathMatchers("/eureka/**").permitAll()
-                .pathMatchers("/actuator/**").permitAll()
+                .pathMatchers("/eureka/**", "/actuator/**").permitAll()
+                .pathMatchers("/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
+                .pathMatchers("/v3/api-docs/policy-service", "/v3/api-docs/quote-service", "/v3/api-docs/search-service", "/v3/api-docs/document-service").permitAll()
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(

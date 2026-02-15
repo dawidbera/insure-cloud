@@ -22,19 +22,40 @@ spring:
         - id: policy-service
           uri: lb://policy-service
           predicates:
-            - Path=/api/policies/**
+            - Path=/api/policies/**, /v3/api-docs/policy-service
+          filters:
+            - RewritePath=/v3/api-docs/policy-service, /v3/api-docs
         - id: quote-service
           uri: lb://quote-service
           predicates:
-            - Path=/api/quotes/**
+            - Path=/api/quotes/**, /v3/api-docs/quote-service
+          filters:
+            - RewritePath=/v3/api-docs/quote-service, /v3/api-docs
         - id: search-service
           uri: lb://search-service
           predicates:
-            - Path=/api/search/**
+            - Path=/api/search/**, /v3/api-docs/search-service
+          filters:
+            - RewritePath=/v3/api-docs/search-service, /v3/api-docs
         - id: document-service
           uri: lb://document-service
           predicates:
-            - Path=/api/documents/**
+            - Path=/api/documents/**, /v3/api-docs/document-service
+          filters:
+            - RewritePath=/v3/api-docs/document-service, /v3/api-docs
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Policy Service
+        url: /v3/api-docs/policy-service
+      - name: Quote Service
+        url: /v3/api-docs/quote-service
+      - name: Search Service
+        url: /v3/api-docs/search-service
+      - name: Document Service
+        url: /v3/api-docs/document-service
 
 eureka:
   client:
