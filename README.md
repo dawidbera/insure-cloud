@@ -12,15 +12,17 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 - **Framework:** Spring Boot 3.4
 - **API Gateway:** Spring Cloud Gateway
 - **Discovery:** Netflix Eureka
+- **Resilience:** Resilience4j (Circuit Breaker, Fallback)
+- **Validation:** Jakarta Validation
 - **Persistence:** PostgreSQL, DynamoDB, Redis
 - **Infrastructure:** Docker Compose, LocalStack (S3, SQS, SNS)
 - **Search:** Elasticsearch
-- **Testing:** JUnit 5, Mockito, Testcontainers
+- **Testing:** JUnit 5, Mockito, Testcontainers, WireMock
 - **API:** OpenAPI (Swagger)
 
 ## 🏗 Architecture & Request Flow
 
-The system utilizes a centralized **API Gateway** and **Service Discovery** to manage internal and external communication.
+The system utilizes a centralized **API Gateway** and **Service Discovery**, now enhanced with **Resilience4j**, **Global Error Handling**, and robust **Validation**.
 
 ### Microservices Architecture & Request Flow Diagram
 ```mermaid
@@ -31,22 +33,40 @@ graph TB
         Eureka[Discovery Service: Eureka]
     end
 
-    GW <-->|Fetch Routes| Eureka
-    
-    subgraph "Service Layer (Synchronous)"
-        API_Policy[Policy Service]
-        API_Quote[Quote Service]
-        API_Search[Search Service]
-        API_Doc[Document Service]
+    subgraph "Service Layer (Synchronous & Resilient)"
+        direction TB
+        PS[Policy Service]
+        QS[Quote Service]
+        SS[Search Service]
+        DS[Document Service]
+        
+        subgraph "Internal Resilience & Logic"
+            CB{Circuit Breaker}
+            Fallback[Fallback Handler]
+            VAL[Validation & Global Error Handler]
+        end
     end
 
-    GW -->|Load Balanced| API_Policy
-    GW -->|Load Balanced| API_Quote
-    GW -->|Load Balanced| API_Search
-    GW -->|Load Balanced| API_Doc
+    GW <-->|Fetch Routes| Eureka
+    PS & QS & SS & DS -.->|Register| Eureka
+    
+    GW -->|Route| PS
+    GW -->|Route| QS
+    GW -->|Route| SS
+    GW -->|Route| DS
 
-    API_Quote -->|Cache| Redis[(Redis)]
-    API_Policy -->|Store| DB_PG[(PostgreSQL)]
+    PS -.-> VAL
+    QS -.-> VAL
+    SS -.-> VAL
+    DS -.-> VAL
+    
+    PS -- "QuoteClient" --> CB
+    CB -->|Allowed| QS
+    CB -.->|Open/Error| Fallback
+    Fallback -.-> PS
+
+    QS -->|Cache| Redis[(Redis)]
+    PS -->|Store| DB_PG[(PostgreSQL)]
     
     subgraph "Event-Driven Layer (Asynchronous)"
         Outbox[Outbox Processor]

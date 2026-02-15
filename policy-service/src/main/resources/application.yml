@@ -4,6 +4,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  config:
+    import: "resilience.yml"
   datasource:
     url: jdbc:postgresql://localhost:5432/insure_db
     username: user

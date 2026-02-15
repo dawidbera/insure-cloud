@@ -1,5 +1,6 @@
 package com.insurecloud.policy;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class PolicyController {
      * @return A ResponseEntity containing the created policy.
      */
     @PostMapping
-    public ResponseEntity<Policy> createPolicy(@RequestBody Policy policy) {
+    public ResponseEntity<Policy> createPolicy(@Valid @RequestBody Policy policy) {
         return ResponseEntity.ok(policyService.createPolicy(policy));
     }
 

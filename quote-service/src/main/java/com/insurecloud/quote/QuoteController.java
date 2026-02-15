@@ -1,5 +1,6 @@
 package com.insurecloud.quote;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class QuoteController {
      * @return A ResponseEntity containing the calculated quote response.
      */
     @PostMapping
-    public ResponseEntity<QuoteResponse> getQuote(@RequestBody QuoteRequest request) {
+    public ResponseEntity<QuoteResponse> getQuote(@Valid @RequestBody QuoteRequest request) {
         return ResponseEntity.ok(quoteService.calculateQuote(request));
     }
 }
