@@ -11,7 +11,8 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 - **Languages:** Java 21 (with **Virtual Threads** enabled)
 - **Framework:** Spring Boot 3.4
 - **API Gateway:** Spring Cloud Gateway
-- **Discovery:** Netflix Eureka
+- **Discovery:** Netflix Eureka (Secured with Basic Auth)
+- **Security:** Keycloak (OAuth2 / OpenID Connect)
 - **Resilience:** Resilience4j (Circuit Breaker, Fallback)
 - **Validation:** Jakarta Validation
 - **Persistence:** PostgreSQL, DynamoDB, Redis
@@ -22,13 +23,17 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 
 ## 🏗 Architecture & Request Flow
 
-The system utilizes a centralized **API Gateway** and **Service Discovery**, now enhanced with **Resilience4j**, **Global Error Handling**, and robust **Validation**.
+The system utilizes a centralized **API Gateway**, **Service Discovery**, and an **Identity Provider (Keycloak)** to ensure secure, resilient, and manageable communication.
 
 ### Microservices Architecture & Request Flow Diagram
 ```mermaid
 graph TB
-    Client[Client / Frontend] -->|REST Request: 8080| GW[API Gateway]
+    Client[Client / Frontend]
     
+    subgraph "Identity & Access"
+        Keycloak[Keycloak: 8088]
+    end
+
     subgraph "Control Plane"
         Eureka[Discovery Service: Eureka]
     end
@@ -47,24 +52,31 @@ graph TB
         end
     end
 
-    GW <-->|Fetch Routes| Eureka
-    PS & QS & SS & DS -.->|Register| Eureka
+    %% Auth Flow
+    Client -->|1. Get Token| Keycloak
+    Client -->|2. REST Request + JWT: 8080| GW[API Gateway]
     
+    %% Internal Control
+    GW <-->|Fetch Routes| Eureka
+    GW -.->|Validate JWT| Keycloak
+    PS & QS & SS & DS -.->|Validate JWT| Keycloak
+    PS & QS & SS & DS -.->|Register with Basic Auth| Eureka
+    
+    %% Routing
     GW -->|Route| PS
     GW -->|Route| QS
     GW -->|Route| SS
     GW -->|Route| DS
 
-    PS -.-> VAL
-    QS -.-> VAL
-    SS -.-> VAL
-    DS -.-> VAL
+    %% Logic & Resilience
+    PS & QS & SS & DS -.-> VAL
     
     PS -- "QuoteClient" --> CB
     CB -->|Allowed| QS
     CB -.->|Open/Error| Fallback
     Fallback -.-> PS
 
+    %% Persistence
     QS -->|Cache| Redis[(Redis)]
     PS -->|Store| DB_PG[(PostgreSQL)]
     

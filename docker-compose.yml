@@ -68,6 +68,18 @@ services:
         limits:
           memory: 2gb
 
+  # Identity and Access Management
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8088:8080"
+    networks:
+      - insure-network
+
   discovery-service:
     build:
       context: .
@@ -84,9 +96,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
     depends_on:
       - discovery-service
+      - keycloak
     networks:
       - insure-network
 
@@ -102,7 +116,8 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
     depends_on:
       postgres:
         condition: service_healthy
@@ -119,7 +134,8 @@ services:
       - "8082:8082"
     environment:
       - SPRING_DATA_REDIS_HOST=redis
-      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
     depends_on:
       - redis
     networks:
@@ -136,7 +152,8 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
     depends_on:
       - localstack
     networks:
@@ -153,7 +170,8 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
     depends_on:
       - localstack
     networks:
@@ -171,7 +189,8 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
     depends_on:
       - localstack
       - elasticsearch

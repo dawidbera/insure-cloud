@@ -7,6 +7,10 @@ spring:
   threads:
     virtual:
       enabled: true
+  security:
+    user:
+      name: ${EUREKA_USER:admin}
+      password: ${EUREKA_PASSWORD:password}
 
 eureka:
   instance:
