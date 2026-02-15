@@ -18,6 +18,7 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 - **Persistence:** PostgreSQL, DynamoDB, Redis
 - **Infrastructure:** Docker Compose, LocalStack (S3, SQS, SNS)
 - **Search:** Elasticsearch
+- **Observability:** Prometheus, Grafana, Micrometer Tracing (Zipkin)
 - **Testing:** JUnit 5, Mockito, Testcontainers, WireMock
 - **API:** OpenAPI (Swagger)
 
@@ -37,6 +38,12 @@ graph TB
 
     subgraph "Control Plane"
         Eureka[Discovery Service: Eureka]
+    end
+
+    subgraph "Observability & Monitoring"
+        Prometheus[Prometheus: 9090]
+        Grafana[Grafana: 3000]
+        Zipkin[Zipkin: 9411]
     end
 
     subgraph "Service Layer (Synchronous & Resilient)"
@@ -75,6 +82,11 @@ graph TB
     GW -->|Route| DS
     GW -->|Route| NS
 
+    %% Observability Flow
+    GW & PS & QS & SS & DS & NS -.->|Metrics| Prometheus
+    GW & PS & QS & SS & DS & NS -.->|Traces| Zipkin
+    Prometheus -.->|Data Source| Grafana
+    
     %% Logic & Resilience
     PS & QS & SS -.-> VAL
     
@@ -156,9 +168,17 @@ curl -X POST http://localhost:8080/api/policies \
 curl http://localhost:8080/api/search/by-number?policyNumber=POL-123
 ```
 
-## 📈 API Documentation
-Once the services are running, you can access the **Aggregated Swagger UI** at the Gateway:
+## 📈 API Documentation & Monitoring
+Once the services are running, you can access the tools:
+
+### API Documentation
 - **Centralized API Docs:** `http://localhost:8080/swagger-ui.html`
+
+### Monitoring & Tracing
+- **Prometheus (Metrics):** `http://localhost:9090`
+- **Grafana (Dashboards):** `http://localhost:3000` (admin/admin)
+- **Zipkin (Distributed Tracing):** `http://localhost:9411`
+
 
 Individual service documentation (if needed):
 - Policy Service: `http://localhost:8081/swagger-ui.html`

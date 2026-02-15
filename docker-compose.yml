@@ -98,9 +98,11 @@ services:
     environment:
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - discovery-service
       - keycloak
+      - zipkin
     networks:
       - insure-network
 
@@ -118,10 +120,13 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       postgres:
         condition: service_healthy
       localstack:
+        condition: service_started
+      zipkin:
         condition: service_started
     networks:
       - insure-network
@@ -136,8 +141,10 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - redis
+      - zipkin
     networks:
       - insure-network
 
@@ -154,8 +161,10 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - localstack
+      - zipkin
     networks:
       - insure-network
 
@@ -172,8 +181,10 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - localstack
+      - zipkin
     networks:
       - insure-network
 
@@ -191,9 +202,39 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - localstack
       - elasticsearch
+      - zipkin
+    networks:
+      - insure-network
+
+  # Monitoring: Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - insure-network
+
+  # Visualization: Grafana
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - insure-network
+
+  # Distributed Tracing: Zipkin
+  zipkin:
+    image: openzipkin/zipkin:latest
+    ports:
+      - "9411:9411"
     networks:
       - insure-network
 
