@@ -73,6 +73,7 @@ graph TB
     GW -->|Route| QS
     GW -->|Route| SS
     GW -->|Route| DS
+    GW -->|Route| NS
 
     %% Logic & Resilience
     PS & QS & SS -.-> VAL
@@ -107,6 +108,11 @@ graph TB
 
     DS -->|Upload PDF| S3[AWS S3]
     SS -->|Index| ES[(Elasticsearch)]
+
+    subgraph "API Documentation (Aggregated)"
+        GW -->|Expose| Swagger[Swagger UI: 8080/swagger-ui.html]
+        Swagger -.->|Aggregate| PS & QS & SS & DS & NS
+    end
 ```
 
 ## 🚦 Getting Started
@@ -151,8 +157,10 @@ curl http://localhost:8080/api/search/by-number?policyNumber=POL-123
 ```
 
 ## 📈 API Documentation
-Once the services are running, you can access the Swagger UI:
-- API Gateway: `http://localhost:8080/swagger-ui.html` (Planned aggregation)
+Once the services are running, you can access the **Aggregated Swagger UI** at the Gateway:
+- **Centralized API Docs:** `http://localhost:8080/swagger-ui.html`
+
+Individual service documentation (if needed):
 - Policy Service: `http://localhost:8081/swagger-ui.html`
 - Quote Service: `http://localhost:8082/swagger-ui.html`
 - Notification Service: `http://localhost:8083/swagger-ui.html`
