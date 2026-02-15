@@ -5,37 +5,37 @@ import com.insurecloud.policy.exception.ErrorResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
-
-import java.time.Duration;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests for Resilience (Circuit Breaker) and Validation logic.
- * Uses WireMock to simulate external service failures and TestRestTemplate
- * to verify global error handling.
+ * Uses WireMock to simulate external service failures and MockMvc
+ * to verify global error handling with security.
  */
 @AutoConfigureWireMock(port = 0)
 @ActiveProfiles("test")
-@TestPropertySource(properties = "spring.cloud.compatibility-verifier.enabled=false")
+@AutoConfigureMockMvc
 public class ResilienceAndValidationIntegrationTest extends AbstractIntegrationTest {
 
     @TestConfiguration
@@ -51,7 +51,7 @@ public class ResilienceAndValidationIntegrationTest extends AbstractIntegrationT
     }
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
     @Autowired
     private QuoteClient quoteClient;
@@ -68,23 +68,27 @@ public class ResilienceAndValidationIntegrationTest extends AbstractIntegrationT
      */
     @Test
     @DisplayName("Should return 400 Bad Request when policy data is invalid")
-    void shouldReturn400WhenPolicyIsInvalid() {
+    void shouldReturn400WhenPolicyIsInvalid() throws Exception {
         // given: Invalid policy (missing customerId, negative premium)
-        Policy invalidPolicy = Policy.builder()
-                .policyNumber("INV-001")
-                .customerId("")
-                .startDate(LocalDate.now().minusDays(1)) // Past date
-                .endDate(LocalDate.now().plusYears(1))
-                .premiumAmount(new BigDecimal("-100.00"))
-                .build();
+        String invalidPolicyJson = """
+                {
+                    "policyNumber": "INV-001",
+                    "customerId": "",
+                    "startDate": "2020-01-01",
+                    "endDate": "2021-01-01",
+                    "premiumAmount": -100.00
+                }
+                """;
 
-        // when
-        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity("/api/policies", invalidPolicy, ErrorResponse.class);
-
-        // then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().errors()).containsKeys("customerId", "startDate", "premiumAmount");
+        // when & then
+        mockMvc.perform(post("/api/policies")
+                        .with(jwt().authorities(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_INSURANCE_AGENT")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidPolicyJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.customerId").exists())
+                .andExpect(jsonPath("$.errors.startDate").exists())
+                .andExpect(jsonPath("$.errors.premiumAmount").exists());
     }
 
     /**
@@ -95,7 +99,7 @@ public class ResilienceAndValidationIntegrationTest extends AbstractIntegrationT
     @DisplayName("Should trigger fallback when quote-service returns error")
     void shouldTriggerFallbackWhenQuoteServiceFails() {
         // given: WireMock stub for quote-service error
-        stubFor(post(urlEqualTo("/api/quotes"))
+        stubFor(com.github.tomakehurst.wiremock.client.WireMock.post(urlEqualTo("/api/quotes"))
                 .willReturn(aResponse()
                         .withStatus(500)
                         .withHeader("Content-Type", "application/json")));
@@ -120,7 +124,7 @@ public class ResilienceAndValidationIntegrationTest extends AbstractIntegrationT
     @DisplayName("Should trigger fallback when quote-service is slow (Timeout Simulation)")
     void shouldTriggerFallbackWhenQuoteServiceIsSlow() {
         // given: WireMock stub with delay
-        stubFor(post(urlEqualTo("/api/quotes"))
+        stubFor(com.github.tomakehurst.wiremock.client.WireMock.post(urlEqualTo("/api/quotes"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withFixedDelay(2000) // 2 seconds delay

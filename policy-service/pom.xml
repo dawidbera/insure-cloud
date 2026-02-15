@@ -83,10 +83,15 @@
 			<artifactId>spring-cloud-aws-starter-sns</artifactId>
 		</dependency>
 
-		<!-- Discovery -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.insurecloud</groupId>
+			<artifactId>common-security</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Resilience -->

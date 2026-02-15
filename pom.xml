@@ -23,6 +23,7 @@
         <module>search-service</module>
         <module>discovery-service</module>
         <module>api-gateway</module>
+        <module>common-security</module>
     </modules>
 
     <properties>
@@ -60,6 +61,15 @@
     </dependencyManagement>
 
     <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dspring.cloud.compatibility-verifier.enabled=false</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>

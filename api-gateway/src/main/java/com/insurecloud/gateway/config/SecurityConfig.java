@@ -1,5 +1,6 @@
 package com.insurecloud.gateway.config;
 
+import com.insurecloud.common.security.KeycloakJwtAuthenticationConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -28,7 +29,9 @@ public class SecurityConfig {
                 .pathMatchers("/actuator/**").permitAll()
                 .anyExchange().authenticated()
             )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(
+                jwt -> jwt.jwtAuthenticationConverter(KeycloakJwtAuthenticationConverter.createReactiveConverter())
+            ));
         return http.build();
     }
 }

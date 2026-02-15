@@ -10,7 +10,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.cloud.compatibility-verifier.enabled=false")
 @Testcontainers
 public abstract class AbstractIntegrationTest {
 
@@ -27,6 +27,7 @@ public abstract class AbstractIntegrationTest {
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.cloud.aws.endpoint", () -> localstack.getEndpoint().toString());
         registry.add("spring.cloud.aws.sqs.endpoint", () -> localstack.getEndpoint().toString());
         registry.add("spring.cloud.aws.region.static", localstack::getRegion);
         registry.add("spring.cloud.aws.credentials.access-key", localstack::getAccessKey);

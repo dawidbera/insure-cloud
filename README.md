@@ -23,7 +23,7 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 
 ## 🏗 Architecture & Request Flow
 
-The system utilizes a centralized **API Gateway**, **Service Discovery**, and an **Identity Provider (Keycloak)** to ensure secure, resilient, and manageable communication.
+The system utilizes a centralized **API Gateway**, **Service Discovery**, and an **Identity Provider (Keycloak)** to ensure secure, resilient, and manageable communication. A **Zero-Trust** security model is enforced, where every service validates JWT tokens and checks RBAC roles using the shared `common-security` library.
 
 ### Microservices Architecture & Request Flow Diagram
 ```mermaid
@@ -32,6 +32,7 @@ graph TB
     
     subgraph "Identity & Access"
         Keycloak[Keycloak: 8088]
+        CS[common-security: lib]
     end
 
     subgraph "Control Plane"
@@ -40,27 +41,32 @@ graph TB
 
     subgraph "Service Layer (Synchronous & Resilient)"
         direction TB
-        PS[Policy Service]
-        QS[Quote Service]
-        SS[Search Service]
-        DS[Document Service]
+        PS[Policy Service: 8081]
+        QS[Quote Service: 8082]
+        SS[Search Service: 8085]
+        DS[Document Service: 8084]
+        NS[Notification Service: 8083]
         
         subgraph "Internal Resilience & Logic"
             CB{Circuit Breaker}
             Fallback[Fallback Handler]
-            VAL[Validation & Global Error Handler]
+            VAL[Jakarta Validation]
         end
     end
 
     %% Auth Flow
-    Client -->|1. Get Token| Keycloak
-    Client -->|2. REST Request + JWT: 8080| GW[API Gateway]
+    Client -->|1. Authenticate| Keycloak
+    Client -->|2. Request + JWT: 8080| GW[API Gateway]
     
+    %% Shared Security Lib Usage
+    GW & PS & QS & SS & DS & NS -.->|Uses| CS
+    CS -.->|Extract ROLE_| Keycloak
+
     %% Internal Control
     GW <-->|Fetch Routes| Eureka
     GW -.->|Validate JWT| Keycloak
-    PS & QS & SS & DS -.->|Validate JWT| Keycloak
-    PS & QS & SS & DS -.->|Register with Basic Auth| Eureka
+    PS & QS & SS & DS & NS -.->|Validate JWT + RBAC| Keycloak
+    PS & QS & SS & DS & NS -.->|Register with Basic Auth| Eureka
     
     %% Routing
     GW -->|Route| PS
@@ -69,7 +75,7 @@ graph TB
     GW -->|Route| DS
 
     %% Logic & Resilience
-    PS & QS & SS & DS -.-> VAL
+    PS & QS & SS -.-> VAL
     
     PS -- "QuoteClient" --> CB
     CB -->|Allowed| QS
@@ -87,10 +93,6 @@ graph TB
         SQS_N[SQS: notification-queue]
         SQS_D[SQS: document-queue]
         SQS_S[SQS: search-queue]
-        
-        Service_Notif[Notification Service]
-        Service_Doc[Document Service]
-        Service_Search[Search Service]
     end
 
     DB_PG -.->|Polling| Outbox
@@ -99,12 +101,12 @@ graph TB
     SNS -->|Fan-out| SQS_D
     SNS -->|Fan-out| SQS_S
     
-    SQS_N -->|Consume| Service_Notif
-    SQS_D -->|Consume| Service_Doc
-    SQS_S -->|Consume| Service_Search
+    SQS_N -->|Consume| NS
+    SQS_D -->|Consume| DS
+    SQS_S -->|Consume| SS
 
-    Service_Doc -->|Upload PDF| S3[AWS S3]
-    Service_Search -->|Index| ES[(Elasticsearch)]
+    DS -->|Upload PDF| S3[AWS S3]
+    SS -->|Index| ES[(Elasticsearch)]
 ```
 
 ## 🚦 Getting Started

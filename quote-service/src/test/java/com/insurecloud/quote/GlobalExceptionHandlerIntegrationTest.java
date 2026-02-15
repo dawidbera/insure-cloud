@@ -1,28 +1,34 @@
 package com.insurecloud.quote;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insurecloud.quote.exception.ErrorResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests for Global Exception Handling and Validation in Quote Service.
  */
 @ActiveProfiles("test")
-@TestPropertySource(properties = "spring.cloud.compatibility-verifier.enabled=false")
+@AutoConfigureMockMvc
 public class GlobalExceptionHandlerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * Verifies that the Quote Service validates incoming requests.
@@ -30,7 +36,7 @@ public class GlobalExceptionHandlerIntegrationTest extends AbstractIntegrationTe
      */
     @Test
     @DisplayName("Should return 400 Bad Request when quote request is invalid")
-    void shouldReturn400WhenQuoteRequestIsInvalid() {
+    void shouldReturn400WhenQuoteRequestIsInvalid() throws Exception {
         // given: Invalid quote request (blank productCode, young customer, negative assetValue)
         QuoteRequest invalidRequest = QuoteRequest.builder()
                 .productCode("")
@@ -38,16 +44,15 @@ public class GlobalExceptionHandlerIntegrationTest extends AbstractIntegrationTe
                 .assetValue(new BigDecimal("-500.00"))
                 .build();
 
-        // when
-        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity("/api/quotes", invalidRequest, ErrorResponse.class);
-
-        // then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().message()).isEqualTo("Validation Failed");
-        assertThat(response.getBody().errors())
-                .containsEntry("productCode", "Product code is mandatory")
-                .containsEntry("customerAge", "Customer must be at least 18 years old")
-                .containsEntry("assetValue", "Asset value must be positive");
+        // when & then
+        mockMvc.perform(post("/api/quotes")
+                        .with(jwt().authorities(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_CUSTOMER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Failed"))
+                .andExpect(jsonPath("$.errors.productCode").value("Product code is mandatory"))
+                .andExpect(jsonPath("$.errors.customerAge").value("Customer must be at least 18 years old"))
+                .andExpect(jsonPath("$.errors.assetValue").value("Asset value must be positive"));
     }
 }
