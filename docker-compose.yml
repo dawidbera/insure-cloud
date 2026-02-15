@@ -77,6 +77,19 @@ services:
     networks:
       - insure-network
 
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_SERVER=http://discovery-service:8761/eureka/
+    depends_on:
+      - discovery-service
+    networks:
+      - insure-network
+
   policy-service:
     build:
       context: .

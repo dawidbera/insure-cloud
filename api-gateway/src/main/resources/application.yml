@@ -1,0 +1,43 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  threads:
+    virtual:
+      enabled: true
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: policy-service
+          uri: lb://policy-service
+          predicates:
+            - Path=/api/policies/**
+        - id: quote-service
+          uri: lb://quote-service
+          predicates:
+            - Path=/api/quotes/**
+        - id: search-service
+          uri: lb://search-service
+          predicates:
+            - Path=/api/search/**
+        - id: document-service
+          uri: lb://document-service
+          predicates:
+            - Path=/api/documents/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
