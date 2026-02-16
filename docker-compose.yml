@@ -31,9 +31,9 @@ services:
     image: postgres:16-alpine
     container_name: insure-db
     environment:
-      POSTGRES_DB: insure_db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      - POSTGRES_DB=insure_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
     ports:
       - "5432:5432"
     networks:
@@ -71,10 +71,12 @@ services:
   # Identity and Access Management
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.0
-    command: start-dev
+    command: start-dev --import-realm
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    volumes:
+      - ./infra/keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
     ports:
       - "8088:8080"
     networks:
@@ -88,6 +90,8 @@ services:
       - "8761:8761"
     networks:
       - insure-network
+    environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
 
   api-gateway:
     build:
@@ -96,8 +100,10 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
-      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - discovery-service
@@ -113,13 +119,15 @@ services:
     ports:
       - "8081:8081"
     environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/insure_db
       - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
-      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       postgres:
@@ -138,9 +146,11 @@ services:
     ports:
       - "8082:8082"
     environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - SPRING_DATA_REDIS_HOST=redis
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
-      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - redis
@@ -155,12 +165,14 @@ services:
     ports:
       - "8083:8083"
     environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
-      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - localstack
@@ -175,12 +187,14 @@ services:
     ports:
       - "8084:8084"
     environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
-      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - localstack
@@ -195,13 +209,15 @@ services:
     ports:
       - "8085:8085"
     environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - SPRING_CLOUD_AWS_ENDPOINT=http://localstack:4566
       - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
-      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
+      - KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       - localstack
@@ -226,6 +242,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - GF_SECURITY_ADMIN_PASSWORD=admin
     networks:
       - insure-network
