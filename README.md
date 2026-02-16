@@ -40,7 +40,7 @@ graph TB
         Eureka[Discovery Service: Eureka]
     end
 
-    subgraph "Observability & Monitoring"
+    subgraph "Observability"
         Prometheus[Prometheus: 9090]
         Grafana[Grafana: 3000]
         Zipkin[Zipkin: 9411]
@@ -54,93 +54,70 @@ graph TB
         DS[Document Service: 8084]
         NS[Notification Service: 8083]
         
-        subgraph "Internal Resilience & Logic"
+        subgraph "Internal Logic Patterns"
             CB{Circuit Breaker}
             Fallback[Fallback Handler]
-            VAL[Jakarta Validation]
+            QS_STRAT[Strategy Pattern: Car/Home/Life]
         end
     end
 
-    %% Auth Flow
+    %% Auth & Routing
     Client -->|1. Authenticate| Keycloak
-    Client -->|2. Request + JWT: 8080| GW[API Gateway]
+    Client -->|2. Request + JWT| GW[API Gateway: 8080]
     
-    %% Shared Security Lib Usage
-    GW & PS & QS & SS & DS & NS -.->|Uses| CS
-    CS -.->|Extract ROLE_| Keycloak
-
-    %% Internal Control
     GW <-->|Fetch Routes| Eureka
     GW -.->|Validate JWT| Keycloak
-    PS & QS & SS & DS & NS -.->|Validate JWT + RBAC| Keycloak
-    PS & QS & SS & DS & NS -.->|Register with Basic Auth| Eureka
-    
-    %% Routing
-    GW -->|Route| PS
-    GW -->|Route| QS
-    GW -->|Route| SS
-    GW -->|Route| DS
-    GW -->|Route| NS
+    GW -->|Route| PS & QS & SS & DS & NS
 
-    %% Observability Flow
-    GW & PS & QS & SS & DS & NS -.->|Metrics| Prometheus
-    GW & PS & QS & SS & DS & NS -.->|Traces| Zipkin
-    Prometheus -.->|Data Source| Grafana
-    
-    %% Logic & Resilience
-    PS & QS & SS -.-> VAL
-    
+    %% Security & Validation
+    PS & QS & SS & DS & NS -.->|Validate JWT via| CS
+    CS -.->|Map Roles| Keycloak
+
+    %% Inter-service Flow
     PS -- "QuoteClient" --> CB
     CB -->|Allowed| QS
-    CB -.->|Open/Error| Fallback
+    CB -.->|Open/Fallback| Fallback
     Fallback -.-> PS
+    
+    QS -.->|Premium Strategy| QS_STRAT
 
     %% Persistence
     QS -->|Cache| Redis[(Redis)]
-    PS -->|Store| DB_PG[(PostgreSQL)]
+    PS -->|PostgreSQL| DB_PG[(Transactional Outbox)]
     PS -->|Audit Log| DB_DYNAMO[(DynamoDB)]
     
     subgraph "Event-Driven Layer (Asynchronous)"
+        direction LR
         Outbox[Outbox Processor]
-        SNS[AWS SNS: policy-issued-topic]
-        
-        SQS_N[SQS: notification-queue]
-        SQS_D[SQS: document-queue]
-        SQS_S[SQS: search-queue]
+        SNS[AWS SNS: Topic]
+        SQS[SQS Queues]
     end
 
     DB_PG -.->|Polling| Outbox
     Outbox -->|Publish| SNS
-    SNS -->|Fan-out| SQS_N
-    SNS -->|Fan-out| SQS_D
-    SNS -->|Fan-out| SQS_S
+    SNS -->|Fan-out| SQS
     
-    SQS_N -->|Consume| NS
-    SQS_D -->|Consume| DS
-    SQS_S -->|Consume| SS
+    SQS -.->|Consume| NS & DS & SS
 
-    subgraph "External AWS Services (LocalStack Emulated)"
-        S3[AWS S3: policy-documents]
-        SES[AWS SES: Email Notifications]
+    subgraph "LocalStack (AWS Emulation)"
+        S3[S3: policy-documents]
+        SES[SES: Notifications]
     end
 
     NS -->|Send| SES
     DS -->|Upload PDF| S3
     SS -->|Index| ES[(Elasticsearch)]
 
-    subgraph "Internal Resilience & Logic"
-        CB{Circuit Breaker}
-        Fallback[Fallback Handler]
-        VAL[Jakarta Validation]
-        QS_STRAT[Strategy Pattern: Car/Home/Life]
+    subgraph "API Documentation"
+        Swagger[Swagger UI Aggregator]
+        GW -->|Expose: 8080/swagger-ui.html| Swagger
+        Swagger -.->|Aggregate OpenAPI| PS & QS & SS & DS & NS
     end
-    
-    QS -.-> QS_STRAT
 
-    subgraph "API Documentation (Aggregated)"
-        GW -->|Expose| Swagger[Swagger UI: 8080/swagger-ui.html]
-        Swagger -.->|Aggregate| PS & QS & SS & DS & NS
-    end
+    %% Observability
+    PS & QS & SS & DS & NS & GW -.->|Metrics| Prometheus
+    PS & QS & SS & DS & NS & GW -.->|Traces| Zipkin
+    Prometheus -.-> Grafana
 ```
 
 ## 🚦 Getting Started
@@ -162,8 +139,19 @@ You can launch the full environment (Infrastructure + Microservices) with a sing
 docker compose up -d --build
 ```
 
-### Verification via API Gateway (Port 8080)
-Test the end-to-end flow through the Gateway:
+### Verification & Testing
+
+#### 1. Obtain a Security Token
+Since the API is secured with Keycloak, you need a JWT token to call most endpoints. Use the provided helper script:
+
+- **For Insurance Agent:** `./get-token.sh` (or `./get-token.sh AGENT`)
+- **For Admin:** `./get-token.sh ADMIN`
+- **For Customer:** `./get-token.sh CUSTOMER`
+
+The script will output a `Bearer <token>` string.
+
+#### 2. Test the Flow via API Gateway (Port 8080)
+You can use the **Swagger UI** (`http://localhost:8080/swagger-ui.html`) or **curl**.
 
 1. **Calculate a Quote:**
 ```bash
@@ -184,16 +172,34 @@ curl -X POST http://localhost:8080/api/policies \
 curl http://localhost:8080/api/search/by-number?policyNumber=POL-123
 ```
 
-## 📈 API Documentation & Monitoring
+### 📈 API Documentation & Monitoring
 Once the services are running, you can access the tools:
 
-### API Documentation
+#### API Documentation
 - **Centralized API Docs:** `http://localhost:8080/swagger-ui.html`
 
-### Monitoring & Tracing
+#### Monitoring & Tracing
 - **Prometheus (Metrics):** `http://localhost:9090`
 - **Grafana (Dashboards):** `http://localhost:3000` (admin/admin)
 - **Zipkin (Distributed Tracing):** `http://localhost:9411`
+
+### 🧪 Automated Testing (E2E & Integration)
+The project emphasizes reliability through comprehensive automated testing using **Testcontainers** and **WireMock**.
+
+- **Business Flow E2E Test:** `BusinessProcessFlowIntegrationTest.java` (in `policy-service`) covers the entire process:
+    1. Mocking the Quote Engine response.
+    2. Creating a policy via REST API.
+    3. Verifying the **Transactional Outbox** pattern.
+    4. Confirming asynchronous event processing and **Audit Log** creation in DynamoDB.
+- **Infrastructure Verification:** `DocumentListenerIntegrationTest.java` (in `document-service`) verifies:
+    1. Consumption of SQS events.
+    2. PDF generation.
+    3. Successful upload to **AWS S3**.
+
+To run all integration tests:
+```bash
+mvn test -Pintegration-tests
+```
 
 
 Individual service documentation (if needed):
