@@ -15,8 +15,8 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 - **Security:** Keycloak (OAuth2 / OpenID Connect)
 - **Resilience:** Resilience4j (Circuit Breaker, Fallback)
 - **Validation:** Jakarta Validation
-- **Persistence:** PostgreSQL, DynamoDB, Redis
-- **Infrastructure:** Docker Compose, LocalStack (S3, SQS, SNS)
+- **Persistence:** PostgreSQL, DynamoDB (Audit Log), Redis
+- **Infrastructure:** Docker Compose, LocalStack (S3, SQS, SNS, DynamoDB)
 - **Search:** Elasticsearch
 - **Observability:** Prometheus, Grafana, Micrometer Tracing (Zipkin)
 - **Testing:** JUnit 5, Mockito, Testcontainers, WireMock
@@ -98,6 +98,7 @@ graph TB
     %% Persistence
     QS -->|Cache| Redis[(Redis)]
     PS -->|Store| DB_PG[(PostgreSQL)]
+    PS -->|Audit Log| DB_DYNAMO[(DynamoDB)]
     
     subgraph "Event-Driven Layer (Asynchronous)"
         Outbox[Outbox Processor]
