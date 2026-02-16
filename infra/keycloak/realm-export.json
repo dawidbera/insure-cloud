@@ -1,0 +1,94 @@
+{
+  "id": "insure-cloud",
+  "realm": "insure-cloud",
+  "enabled": true,
+  "accessTokenLifespan": 3600,
+  "ssoSessionIdleTimeout": 36000,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "INSURANCE_AGENT",
+        "description": "Can create and view policies"
+      },
+      {
+        "name": "CUSTOMER",
+        "description": "Can request quotes and view own policies"
+      },
+      {
+        "name": "ADMIN",
+        "description": "Full access to search and management"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "insure-cloud-public",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "agent-001",
+      "enabled": true,
+      "email": "agent@insurecloud.com",
+      "firstName": "Agent",
+      "lastName": "001",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "INSURANCE_AGENT"
+      ]
+    },
+    {
+      "username": "customer-001",
+      "enabled": true,
+      "email": "customer@example.com",
+      "firstName": "John",
+      "lastName": "Customer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CUSTOMER"
+      ]
+    },
+    {
+      "username": "admin-user",
+      "enabled": true,
+      "email": "admin@insurecloud.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    }
+  ]
+}
