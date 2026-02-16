@@ -119,8 +119,23 @@ graph TB
     SQS_D -->|Consume| DS
     SQS_S -->|Consume| SS
 
-    DS -->|Upload PDF| S3[AWS S3]
+    subgraph "External AWS Services (LocalStack Emulated)"
+        S3[AWS S3: policy-documents]
+        SES[AWS SES: Email Notifications]
+    end
+
+    NS -->|Send| SES
+    DS -->|Upload PDF| S3
     SS -->|Index| ES[(Elasticsearch)]
+
+    subgraph "Internal Resilience & Logic"
+        CB{Circuit Breaker}
+        Fallback[Fallback Handler]
+        VAL[Jakarta Validation]
+        QS_STRAT[Strategy Pattern: Car/Home/Life]
+    end
+    
+    QS -.-> QS_STRAT
 
     subgraph "API Documentation (Aggregated)"
         GW -->|Expose| Swagger[Swagger UI: 8080/swagger-ui.html]
@@ -154,14 +169,14 @@ Test the end-to-end flow through the Gateway:
 ```bash
 curl -X POST http://localhost:8080/api/quotes \
   -H "Content-Type: application/json" \
-  -d '{"productCode": "CAR", "customerAge": 25, "assetValue": 50000}'
+  -d '{"productCode": "CAR_INSURANCE", "customerAge": 25, "assetValue": 50000}'
 ```
 
 2. **Issue a Policy:**
 ```bash
 curl -X POST http://localhost:8080/api/policies \
   -H "Content-Type: application/json" \
-  -d '{"policyNumber": "POL-123", "customerId": "CUST-001", "premiumAmount": 500.00, "startDate": "2026-02-14", "endDate": "2027-02-14"}'
+  -d '{"policyNumber": "POL-123", "customerId": "CUST-001", "premiumAmount": 500.00, "startDate": "2026-02-16", "endDate": "2027-02-16"}'
 ```
 
 3. **Check Search Index:**

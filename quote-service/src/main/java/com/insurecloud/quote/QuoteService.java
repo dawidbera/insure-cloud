@@ -1,37 +1,43 @@
 package com.insurecloud.quote;
 
+import com.insurecloud.quote.strategy.QuoteStrategy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class QuoteService {
 
+    private final List<QuoteStrategy> strategies;
+
     /**
-     * Calculates an insurance premium quote based on the product code, customer age, and asset value.
-     * Uses a base rate and age-based multiplier for the calculation. Results are cached.
+     * Calculates an insurance premium quote based on the product code using specialized strategies.
+     * Results are cached based on the request parameters.
      *
      * @param request The quote request details.
      * @return A QuoteResponse containing the unique quote ID, calculated premium, and expiry date.
+     * @throws IllegalArgumentException if no strategy is found for the given product code.
      */
     @Cacheable(value = "quotes", key = "#request.productCode + #request.customerAge + #request.assetValue")
     public QuoteResponse calculateQuote(QuoteRequest request) {
         log.info("Calculating premium for product: {} and age: {}", request.getProductCode(), request.getCustomerAge());
-        
-        // Simulating some heavy calculation
-        BigDecimal baseRate = new BigDecimal("0.05"); // 5% base rate
-        BigDecimal ageMultiplier = request.getCustomerAge() < 25 ? new BigDecimal("1.5") : new BigDecimal("1.0");
-        
-        BigDecimal totalPremium = request.getAssetValue()
-                .multiply(baseRate)
-                .multiply(ageMultiplier)
-                .setScale(2, RoundingMode.HALF_UP);
+
+        BigDecimal totalPremium = strategies.stream()
+                .filter(strategy -> strategy.supports(request.getProductCode()))
+                .findFirst()
+                .map(strategy -> strategy.calculate(request))
+                .orElseThrow(() -> {
+                    log.error("No calculation strategy found for product code: {}", request.getProductCode());
+                    return new IllegalArgumentException("Unsupported product code: " + request.getProductCode());
+                });
 
         return QuoteResponse.builder()
                 .quoteId(UUID.randomUUID().toString())
