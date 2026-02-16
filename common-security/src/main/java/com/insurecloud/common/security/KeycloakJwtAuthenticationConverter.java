@@ -22,6 +22,7 @@ public class KeycloakJwtAuthenticationConverter {
 
     /**
      * Creates and configures a JwtAuthenticationConverter for Keycloak (Servlet-based).
+     * Uses a custom authorities extractor to handle nested Keycloak roles.
      * 
      * @return A configured JwtAuthenticationConverter.
      */
@@ -31,6 +32,14 @@ public class KeycloakJwtAuthenticationConverter {
         return jwtAuthenticationConverter;
     }
 
+    /**
+     * Extracts roles from the 'realm_access.roles' claim in the Keycloak JWT.
+     * Manual extraction is used because the standard converter does not always 
+     * handle nested JSON objects reliably.
+     * 
+     * @param jwt The source JWT.
+     * @return A collection of GrantedAuthority objects prefixed with ROLE_.
+     */
     private static Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
         Map<String, Object> realmAccess = jwt.getClaim("realm_access");
         if (realmAccess == null || realmAccess.isEmpty()) {
