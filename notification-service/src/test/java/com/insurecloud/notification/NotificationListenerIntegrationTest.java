@@ -4,7 +4,10 @@ import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 
@@ -27,6 +30,9 @@ public class NotificationListenerIntegrationTest extends AbstractIntegrationTest
     @SpyBean
     private NotificationListener notificationListener;
 
+    @MockBean
+    private MailSender mailSender;
+
     /**
      * Initializes the test environment by ensuring the SQS queue exists in LocalStack.
      */
@@ -38,10 +44,11 @@ public class NotificationListenerIntegrationTest extends AbstractIntegrationTest
 
     /**
      * Tests the notification listener by sending a message to SQS
-     * and verifying that the listener's onPolicyIssued method is invoked.
+     * and verifying that the listener's onPolicyIssued method is invoked
+     * and that an email is sent via the MailSender.
      */
     @Test
-    void shouldReceiveMessageFromSqs() {
+    void shouldReceiveMessageFromSqsAndSendEmail() {
         // Given
         PolicyIssuedEvent event = new PolicyIssuedEvent(
                 UUID.randomUUID(),
@@ -56,6 +63,7 @@ public class NotificationListenerIntegrationTest extends AbstractIntegrationTest
         // Then
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
             verify(notificationListener).onPolicyIssued(any(PolicyIssuedEvent.class));
+            verify(mailSender).send(any(SimpleMailMessage.class));
         });
     }
 }
