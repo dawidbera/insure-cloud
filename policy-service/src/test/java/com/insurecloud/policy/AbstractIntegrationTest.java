@@ -13,7 +13,12 @@ import org.testcontainers.utility.DockerImageName;
  * This class sets up and manages shared test infrastructure using Testcontainers,
  * including PostgreSQL and LocalStack for AWS services emulation.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.cloud.compatibility-verifier.enabled=false")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "spring.cloud.compatibility-verifier.enabled=false",
+        "spring.cloud.vault.enabled=false",
+        "eureka.client.enabled=false",
+        "KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud"
+})
 @Testcontainers
 public abstract class AbstractIntegrationTest {
 

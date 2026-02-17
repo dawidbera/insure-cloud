@@ -5,8 +5,9 @@ spring:
     import: "optional:vault://, resilience.yml"
   cloud:
     vault:
-      uri: http://vault:8200
-      token: root
+      enabled: ${SPRING_CLOUD_VAULT_ENABLED:true}
+      uri: ${SPRING_CLOUD_VAULT_URI:http://vault:8200}
+      token: ${SPRING_CLOUD_VAULT_TOKEN:root}
       kv:
         enabled: true
   threads:
@@ -16,12 +17,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/insure-cloud}
   datasource:
-    url: ${spring.datasource.url}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/insure_db}
     driver-class-name: org.postgresql.Driver
-    username: ${spring.datasource.username}
-    password: ${spring.datasource.password}
+    username: ${SPRING_DATASOURCE_USERNAME:user}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
   jpa:
     hibernate:
       ddl-auto: update
@@ -59,5 +60,6 @@ management:
 
 eureka:
   client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
     serviceUrl:
-      defaultZone: ${eureka.client.serviceUrl.defaultZone}
+      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}

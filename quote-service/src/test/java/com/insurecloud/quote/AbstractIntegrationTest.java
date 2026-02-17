@@ -7,7 +7,12 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.cloud.compatibility-verifier.enabled=false")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "spring.cloud.compatibility-verifier.enabled=false",
+        "spring.cloud.vault.enabled=false",
+        "eureka.client.enabled=false",
+        "KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud"
+})
 @Testcontainers
 public abstract class AbstractIntegrationTest {
 
