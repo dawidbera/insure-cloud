@@ -16,7 +16,8 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 - **Resilience:** Resilience4j (Circuit Breaker, Fallback)
 - **Validation:** Jakarta Validation
 - **Persistence:** PostgreSQL, DynamoDB (Audit Log), Redis
-- **Infrastructure:** Docker Compose, LocalStack (S3, SQS, SNS, DynamoDB)
+- **Secret Management:** HashiCorp Vault
+- **Infrastructure:** Docker Compose, LocalStack (S3, SQS, SNS, DynamoDB, SES)
 - **Search:** Elasticsearch
 - **Observability:** Prometheus, Grafana, Micrometer Tracing (Zipkin)
 - **Testing:** JUnit 5, Mockito, Testcontainers, WireMock
@@ -24,15 +25,16 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 
 ## 🏗 Architecture & Request Flow
 
-The system utilizes a centralized **API Gateway**, **Service Discovery**, and an **Identity Provider (Keycloak)** to ensure secure, resilient, and manageable communication. A **Zero-Trust** security model is enforced, where every service validates JWT tokens and checks RBAC roles using the shared `common-security` library.
+The system utilizes a centralized **API Gateway**, **Service Discovery**, and an **Identity Provider (Keycloak)** to ensure secure, resilient, and manageable communication. A **Zero-Trust** security model is enforced, where every service validates JWT tokens and checks RBAC roles using the shared `common-security` library. Secrets and sensitive configurations are managed centrally via **HashiCorp Vault**.
 
 ### Microservices Architecture & Request Flow Diagram
 ```mermaid
 graph TB
     Client[Client / Frontend]
     
-    subgraph "Identity & Access"
+    subgraph "Identity, Access & Secrets"
         Keycloak[Keycloak: 8088]
+        Vault[HashiCorp Vault: 8200]
         CS[common-security: lib]
     end
 
@@ -68,6 +70,9 @@ graph TB
     GW <-->|Fetch Routes| Eureka
     GW -.->|Validate JWT| Keycloak
     GW -->|Route| PS & QS & SS & DS & NS
+
+    %% Secrets Flow
+    PS & QS & SS & DS & NS & GW -.->|Fetch Secrets| Vault
 
     %% Security & Validation
     PS & QS & SS & DS & NS -.->|Validate JWT via| CS

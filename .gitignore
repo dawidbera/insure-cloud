@@ -39,6 +39,9 @@ docker-compose.override.yml
 bin/
 out/
 
+# PKCS #12 files (sensitive)
+*.p12
+
 # Logs
 logs/
 *.log

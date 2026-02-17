@@ -2,6 +2,22 @@
 spring:
   application:
     name: search-service
+  config:
+    import: "optional:vault://"
+  cloud:
+    vault:
+      uri: http://vault:8200
+      token: root
+      kv:
+        enabled: true
+    aws:
+      sqs:
+        endpoint: ${spring.cloud.aws.sqs.endpoint}
+      region:
+        static: ${aws.region}
+      credentials:
+        access-key: ${aws.access.key.id}
+        secret-key: ${aws.secret.access.key}
   threads:
     virtual:
       enabled: true
@@ -9,22 +25,12 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8088/realms/insure-cloud}
+          issuer-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}
   
   # Elasticsearch configuration
   elasticsearch:
-    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
-  
-  # AWS configuration for SQS
-  cloud:
-    aws:
-      sqs:
-        endpoint: ${AWS_ENDPOINT:http://localhost:4566}
-      region:
-        static: ${AWS_REGION:us-east-1}
-      credentials:
-        access-key: test
-        secret-key: test
+    uris: ${spring.elasticsearch.uris}
+
 
 server:
   port: 8085
@@ -57,4 +63,4 @@ management:
 eureka:
   client:
     serviceUrl:
-      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
+      defaultZone: ${eureka.client.serviceUrl.defaultZone}
