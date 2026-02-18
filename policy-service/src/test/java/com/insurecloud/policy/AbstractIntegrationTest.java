@@ -2,6 +2,8 @@ package com.insurecloud.policy;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -37,17 +39,14 @@ public abstract class AbstractIntegrationTest {
     static LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
             .withServices(LocalStackContainer.Service.SNS, LocalStackContainer.Service.SQS, LocalStackContainer.Service.DYNAMODB);
 
-    /**
-     * Static initializer to start LocalStack and configure system properties
-     * for AWS client to connect to the emulated services.
-     * This is necessary because @ServiceConnection does not fully support
-     * all AWS services with dynamic configuration.
-     */
-    static {
-        localstack.start();
-        System.setProperty("spring.cloud.aws.endpoint", localstack.getEndpoint().toString());
-        System.setProperty("spring.cloud.aws.region.static", localstack.getRegion());
-        System.setProperty("spring.cloud.aws.credentials.access-key", localstack.getAccessKey());
-        System.setProperty("spring.cloud.aws.credentials.secret-key", localstack.getSecretKey());
+    @DynamicPropertySource
+    static void overrideProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.cloud.aws.endpoint", localstack::getEndpoint);
+        registry.add("spring.cloud.aws.region.static", localstack::getRegion);
+        registry.add("spring.cloud.aws.credentials.access-key", localstack::getAccessKey);
+        registry.add("spring.cloud.aws.credentials.secret-key", localstack::getSecretKey);
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
     }
 }
