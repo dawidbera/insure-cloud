@@ -8,9 +8,10 @@ provider "aws" {
   s3_use_path_style           = true
 
   endpoints {
-    s3  = "http://localstack:4566"
-    sqs = "http://localstack:4566"
-    sns = "http://localstack:4566"
+    s3       = "http://localstack:4566"
+    sqs      = "http://localstack:4566"
+    sns      = "http://localstack:4566"
+    dynamodb = "http://localstack:4566"
   }
 }
 

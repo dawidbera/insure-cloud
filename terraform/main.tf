@@ -40,10 +40,22 @@ resource "aws_s3_bucket" "policy_documents" {
   bucket = "policy-documents"
 }
 
-# Basic S3 Bucket Configuration (formerly ACL)
+# S3 Bucket Configuration
 resource "aws_s3_bucket_ownership_controls" "example" {
   bucket = aws_s3_bucket.policy_documents.id
   rule {
     object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+# DynamoDB table for audit logs
+resource "aws_dynamodb_table" "audit_log" {
+  name           = "AuditLog"
+  billing_mode   = "PAY_PER_REQUEST"
+  hash_key       = "eventId"
+
+  attribute {
+    name = "eventId"
+    type = "S"
   }
 }
