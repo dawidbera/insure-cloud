@@ -24,6 +24,7 @@
         <module>discovery-service</module>
         <module>api-gateway</module>
         <module>common-security</module>
+        <module>insure-frontend</module>
     </modules>
 
     <properties>

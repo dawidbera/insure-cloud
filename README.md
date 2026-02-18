@@ -183,6 +183,9 @@ Once the services are running, you can access the tools:
 #### API Documentation
 - **Centralized API Docs:** `http://localhost:8080/swagger-ui.html`
 
+#### Web Application
+- **InsureCloud Frontend (Angular):** `http://localhost:4200`
+
 #### Monitoring & Tracing
 - **Prometheus (Metrics):** `http://localhost:9090`
 - **Grafana (Dashboards):** `http://localhost:3000` (admin/admin)
