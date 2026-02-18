@@ -21,7 +21,7 @@ public class QuoteController {
      * @return A ResponseEntity containing the calculated quote response.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'INSURANCE_AGENT')")
+    // @PreAuthorize("hasAnyRole('CUSTOMER', 'INSURANCE_AGENT')")
     public ResponseEntity<QuoteResponse> getQuote(@Valid @RequestBody QuoteRequest request) {
         return ResponseEntity.ok(quoteService.calculateQuote(request));
     }

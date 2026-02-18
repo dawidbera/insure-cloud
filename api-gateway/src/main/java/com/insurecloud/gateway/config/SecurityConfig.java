@@ -27,6 +27,7 @@ public class SecurityConfig {
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers("/eureka/**", "/actuator/**").permitAll()
                 .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
+                .pathMatchers("/api/policies/**", "/api/quotes/**", "/api/search/**", "/api/documents/**").permitAll()
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(

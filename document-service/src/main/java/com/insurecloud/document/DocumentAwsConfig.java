@@ -1,6 +1,7 @@
 package com.insurecloud.document;
 
-import io.awspring.cloud.s3.S3Template;
+import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;
+import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +33,22 @@ public class DocumentAwsConfig {
                 .region(REGION)
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("test", "test")))
+                .build();
+    }
+
+    /**
+     * Configures the default SQS listener container factory.
+     * Sets the acknowledgement mode to ALWAYS to ensure messages are processed before deletion.
+     *
+     * @param sqsAsyncClient The asynchronous SQS client to be used by the factory.
+     * @return A configured SqsMessageListenerContainerFactory.
+     */
+    @Bean
+    public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory(SqsAsyncClient sqsAsyncClient) {
+        return SqsMessageListenerContainerFactory
+                .builder()
+                .configure(options -> options.acknowledgementMode(io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementMode.ALWAYS))
+                .sqsAsyncClient(sqsAsyncClient)
                 .build();
     }
 

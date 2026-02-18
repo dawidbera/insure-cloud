@@ -12,12 +12,6 @@ spring:
     name: api-gateway
   config:
     import: "optional:vault://"
-  cloud:
-    vault:
-      uri: http://vault:8200
-      token: root
-      kv:
-        enabled: true
   threads:
     virtual:
       enabled: true
@@ -27,7 +21,24 @@ spring:
         jwt:
           issuer-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}
   cloud:
+    vault:
+      uri: http://vault:8200
+      token: root
+      kv:
+        enabled: true
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
       discovery:
         locator:
           enabled: true
@@ -81,6 +92,7 @@ springdoc:
 
 eureka:
   client:
+    registry-fetch-interval-seconds: 5
     serviceUrl:
       defaultZone: ${eureka.client.serviceUrl.defaultZone}
 

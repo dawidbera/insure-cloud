@@ -54,6 +54,16 @@ public class PolicyService {
     }
 
     /**
+     * Retrieves all audit log entries from DynamoDB.
+     * Performs a full scan of the AuditLog table.
+     *
+     * @return A list of all audit logs.
+     */
+    public List<AuditLogEntry> getAllAuditLogs() {
+        return auditLogRepository.findAll();
+    }
+
+    /**
      * Serializes the policy issued event and saves it to the outbox table.
      *
      * @param policy The policy for which the event is being recorded.

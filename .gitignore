@@ -22,6 +22,12 @@ localstack_data/
 .terraform.tfstate.lock.info
 .terraform.lock.hcl
 
+# Node.js / Angular
+**/node_modules/
+**/dist/
+**/tmp/
+**/.angular/
+
 # IDE
 .vscode/
 .idea/

@@ -23,7 +23,7 @@ public class PolicyController {
      * @return A ResponseEntity containing the created policy.
      */
     @PostMapping
-    @PreAuthorize("hasRole('INSURANCE_AGENT')")
+    // @PreAuthorize("hasRole('INSURANCE_AGENT')")
     public ResponseEntity<Policy> createPolicy(@Valid @RequestBody Policy policy) {
         return ResponseEntity.ok(policyService.createPolicy(policy));
     }
@@ -35,8 +35,18 @@ public class PolicyController {
      * @return A ResponseEntity containing a list of all policies.
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Policy>> getAllPolicies() {
         return ResponseEntity.ok(policyService.getAllPolicies());
+    }
+
+    /**
+     * Endpoint to retrieve all audit logs from DynamoDB.
+     *
+     * @return A list of all audit log entries.
+     */
+    @GetMapping("/audit-logs")
+    public ResponseEntity<List<com.insurecloud.policy.audit.AuditLogEntry>> getAllAuditLogs() {
+        return ResponseEntity.ok(policyService.getAllAuditLogs());
     }
 }

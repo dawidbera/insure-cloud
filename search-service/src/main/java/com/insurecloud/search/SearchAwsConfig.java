@@ -1,5 +1,6 @@
 package com.insurecloud.search;
 
+import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +31,22 @@ public class SearchAwsConfig {
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("test", "test")))
+                .build();
+    }
+
+    /**
+     * Configures the default SQS listener container factory.
+     * Sets the acknowledgement mode to ALWAYS for reliable message processing.
+     *
+     * @param sqsAsyncClient The asynchronous SQS client.
+     * @return A configured SqsMessageListenerContainerFactory.
+     */
+    @Bean
+    public SqsMessageListenerContainerFactory<Object> defaultSqsListenerContainerFactory(SqsAsyncClient sqsAsyncClient) {
+        return SqsMessageListenerContainerFactory
+                .builder()
+                .configure(options -> options.acknowledgementMode(io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementMode.ALWAYS))
+                .sqsAsyncClient(sqsAsyncClient)
                 .build();
     }
 

@@ -125,7 +125,7 @@ services:
       context: .
       dockerfile: api-gateway/Dockerfile
     ports:
-      - "8080:8080"
+      - "8443:8443"
     environment:
       - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
