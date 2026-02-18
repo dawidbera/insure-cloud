@@ -21,7 +21,7 @@ import org.testcontainers.utility.DockerImageName;
         "eureka.client.enabled=false",
         "KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud"
 })
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 public abstract class AbstractIntegrationTest {
 
     /**

@@ -1,0 +1,84 @@
+name: InsureCloud CI/CD
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # --- Checkout Repo ---
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # --- Enable Debug (If secrets set) ---
+      - name: Show debug info
+        run: |
+          echo "ACTIONS_STEP_DEBUG=${{ secrets.ACTIONS_STEP_DEBUG }}"
+          echo "ACTIONS_RUNNER_DEBUG=${{ secrets.ACTIONS_RUNNER_DEBUG }}"
+          env
+
+      # --- Setup Java ---
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # --- Configure Docker API for Testcontainers ---
+      - name: Configure Docker API Version
+        run: |
+          echo "api.version=1.44" > ~/.docker-java.properties
+          unset DOCKER_API_VERSION
+
+      # --- Maven Build & Test ---
+      - name: Build and Test with Maven
+        run: |
+          set -euxo pipefail
+          mvn -B -Dspring.cloud.compatibility-verifier.enabled=false clean verify
+        continue-on-error: false
+
+      # --- Upload Maven Test Reports as artifact ---
+      - name: Upload Maven Test Reports
+        if: always() # Always upload, even if tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-test-reports
+          path: '**/target/surefire-reports/'
+
+      # --- Docker Build ---
+      - name: Build Docker Images
+        run: |
+          set -euxo pipefail
+          services=(
+            "api-gateway"
+            "discovery-service"
+            "policy-service"
+            "quote-service"
+            "notification-service"
+            "document-service"
+            "search-service"
+          )
+
+          for service in "${services[@]}"; do
+            echo "----------------------------------------"
+            echo " BUILDING image for: $service"
+            echo "----------------------------------------"
+
+            DOCKERFILE="$service/Dockerfile"
+
+            if [[ ! -f "$DOCKERFILE" ]]; then
+              echo "ERROR: Dockerfile not found for $service"
+              exit 1
+            fi
+
+            docker build \
+              --file "$DOCKERFILE" \
+              --tag "insurecloud/$service:latest" \
+              . # Corrected: build context is the current directory (insure-cloud)
+          done
