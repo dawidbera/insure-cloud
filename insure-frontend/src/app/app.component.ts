@@ -95,6 +95,7 @@ export class AppComponent implements OnInit {
     this.http.get<any[]>(`${this.apiUrl}/search/by-number?policyNumber=${this.searchQuery}`)
       .subscribe({
         next: (res) => {
+          console.log('Search results from Elasticsearch:', res);
           this.searchResults = res;
           this.loadingSearch = false;
           this.searchDone = true;
@@ -108,7 +109,7 @@ export class AppComponent implements OnInit {
   }
 
   downloadPdf(policyNumber: string) {
-    const url = `https://localhost:8443${this.apiUrl}/documents/${policyNumber}`;
+    const url = `${this.apiUrl}/documents/${policyNumber}`;
     window.open(url, '_blank');
   }
 

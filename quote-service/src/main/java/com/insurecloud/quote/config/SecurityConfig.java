@@ -30,14 +30,8 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/api/quotes/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(
-                jwt -> jwt.jwtAuthenticationConverter(KeycloakJwtAuthenticationConverter.createConverter())
-            ));
+                .anyRequest().permitAll()
+            );
         return http.build();
     }
 }
