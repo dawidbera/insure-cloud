@@ -14,6 +14,7 @@ import org.testcontainers.utility.DockerImageName;
         "spring.cloud.compatibility-verifier.enabled=false",
         "spring.cloud.vault.enabled=false",
         "eureka.client.enabled=false",
+        "search.initialization.enabled=false",
         "KEYCLOAK_ISSUER_URI=http://localhost:8088/realms/insure-cloud"
 })
 @Testcontainers

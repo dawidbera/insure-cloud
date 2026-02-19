@@ -79,9 +79,3 @@ management:
   tracing:
     sampling:
       probability: 1.0
-
-eureka:
-  client:
-    enabled: ${EUREKA_CLIENT_ENABLED:true}
-    serviceUrl:
-      defaultZone: ${EUREKA_SERVER:http://localhost:8761/eureka/}
