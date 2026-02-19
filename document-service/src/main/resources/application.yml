@@ -24,9 +24,7 @@ spring:
 
 eureka:
   instance:
-    hostname: ${EUREKA_INSTANCE_HOSTNAME:document-service}
     prefer-ip-address: true
-    ip-address: ${EUREKA_INSTANCE_IP:}
     lease-renewal-interval-in-seconds: 5
     lease-expiration-duration-in-seconds: 15
     health-check-url-path: /actuator/health
