@@ -1,6 +1,7 @@
 package com.insurecloud.search.config;
 
 import com.insurecloud.common.security.KeycloakJwtAuthenticationConverter;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -8,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableWebSecurity
@@ -29,5 +31,19 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             );
         return http.build();
+    }
+
+    /**
+     * Creates a RestTemplate bean for making HTTP requests to other services.
+     * 
+     * @param builder The RestTemplateBuilder.
+     * @return A configured RestTemplate.
+     */
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder
+            .setConnectTimeout(java.time.Duration.ofSeconds(5))
+            .setReadTimeout(java.time.Duration.ofSeconds(10))
+            .build();
     }
 }
