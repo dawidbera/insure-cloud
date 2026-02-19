@@ -102,6 +102,23 @@ graph TD
     PR --> GR
 ```
 
+## 📸 Project Showcase
+
+### Interactive Dashboard (Angular)
+![Angular Dashboard](assets/screenshot-angular.png)
+
+### Aggregated API Documentation (Swagger UI)
+![Swagger UI](assets/screenshot-swagger-ui.png)
+
+### Service Discovery (Eureka)
+![Eureka Discovery](assets/screenshot-eureka.png)
+
+### Monitoring & Observability (Grafana)
+![Grafana Dashboard](assets/screenshot-grafana.png)
+
+### Sample Output
+- [📄 Download Sample Policy Certificate (PDF)](assets/policy_POL-TBVWCE0.pdf)
+
 ## 🚦 Getting Started
 
 ### Prerequisites
@@ -190,6 +207,3 @@ mvn test -Pintegration-tests
 - **JDK 21+ & Mockito:** Starting with JDK 21, dynamic loading of Java agents is restricted. To avoid "Mockito is currently self-attaching" warnings and future breakage, Mockito is explicitly configured as a `-javaagent` in the `maven-surefire-plugin`.
 - **Testcontainers & Modern Docker:** Newer Docker engines (API version 1.44+) require modern Testcontainers clients. We use `testcontainers-bom` (1.21.4+) and explicit `api.version=1.44` configuration in CI to ensure stable communication with the Docker daemon.
 - **Resilient CI Builds:** Integration tests are annotated with `@Testcontainers(disabledWithoutDocker = true)` to gracefully skip when Docker is unavailable, preventing unnecessary build failures in restricted environments.
-
-## 📝 License
-This project is licensed under the MIT License.

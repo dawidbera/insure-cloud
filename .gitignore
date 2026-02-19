@@ -68,3 +68,11 @@ logs/
 # virtual machine crash logs
 hs_err_pid*
 replay_pid*
+
+# Certificates and private keys (security)
+*.pem
+*.key
+*.crt
+
+# Localstack cache
+localstack/cache/*
