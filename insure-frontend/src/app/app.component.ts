@@ -110,7 +110,21 @@ export class AppComponent implements OnInit {
 
   downloadPdf(policyNumber: string) {
     const url = `${this.apiUrl}/documents/${policyNumber}`;
-    window.open(url, '_blank');
+    this.http.get(url, { responseType: 'blob' })
+      .subscribe({
+        next: (blob) => {
+          const link = document.createElement('a');
+          const blobUrl = window.URL.createObjectURL(blob);
+          link.href = blobUrl;
+          link.download = `policy_${policyNumber}.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(blobUrl);
+        },
+        error: (err) => {
+          console.error('Failed to download document:', err);
+          alert('Failed to download document. The document may not be ready yet. Please try again in a few seconds.');
+        }
+      });
   }
 
   fetchPolicies() {

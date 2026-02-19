@@ -1,6 +1,7 @@
 package com.insurecloud.document.config;
 
 import com.insurecloud.common.security.KeycloakJwtAuthenticationConverter;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -8,6 +9,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
 
 @Configuration
 @EnableWebSecurity
@@ -29,5 +33,19 @@ public class SecurityConfig {
                 .anyRequest().permitAll()
             );
         return http.build();
+    }
+
+    /**
+     * Creates a RestTemplate bean with configured timeouts for service-to-service communication.
+     * 
+     * @param builder The RestTemplateBuilder.
+     * @return A configured RestTemplate instance.
+     */
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder
+            .setConnectTimeout(Duration.ofSeconds(5))
+            .setReadTimeout(Duration.ofSeconds(10))
+            .build();
     }
 }

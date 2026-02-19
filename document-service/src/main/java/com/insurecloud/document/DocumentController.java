@@ -32,7 +32,7 @@ public class DocumentController {
      * @return The PDF document as a downloadable resource.
      */
     @GetMapping("/{policyNumber}")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable String policyNumber) {
+    public ResponseEntity<?> downloadDocument(@PathVariable String policyNumber) {
         String fileName = "policy_" + policyNumber + ".pdf";
         log.info("Request to download document: {}", fileName);
 
@@ -44,8 +44,26 @@ public class DocumentController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                     .body(resource);
         } catch (Exception e) {
-            log.error("Failed to download document: {}", fileName, e);
-            return ResponseEntity.notFound().build();
+            log.error("Failed to download document: {} - Document not found or S3 access error", fileName, e);
+            return ResponseEntity.status(404).body(
+                new ErrorResponse("Document not found", "The document for policy " + policyNumber + " is not available. Please ensure the policy has been processed and the document has been generated.")
+            );
         }
+    }
+    
+    /**
+     * Simple error response DTO.
+     */
+    static class ErrorResponse {
+        public String error;
+        public String message;
+        
+        public ErrorResponse(String error, String message) {
+            this.error = error;
+            this.message = message;
+        }
+        
+        public String getError() { return error; }
+        public String getMessage() { return message; }
     }
 }
