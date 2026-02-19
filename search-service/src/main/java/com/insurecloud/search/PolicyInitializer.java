@@ -41,7 +41,7 @@ public class PolicyInitializer {
             try {
                 // Wait for services to register in Eureka
                 log.info("Waiting for discovery service to stabilize before first sync...");
-                TimeUnit.SECONDS.sleep(10);
+                TimeUnit.SECONDS.sleep(30);
                 initializePolicies();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

@@ -34,7 +34,7 @@ public class DocumentInitializer {
         Thread.startVirtualThread(() -> {
             try {
                 log.info("Waiting for discovery service to stabilize before document sync...");
-                TimeUnit.SECONDS.sleep(15);
+                TimeUnit.SECONDS.sleep(30);
                 performInitialization();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

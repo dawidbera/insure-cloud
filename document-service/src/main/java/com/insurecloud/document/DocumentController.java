@@ -39,6 +39,13 @@ public class DocumentController {
         try {
             S3Resource resource = s3Template.download(BUCKET_NAME, fileName);
             
+            if (!resource.exists()) {
+                log.warn("Document not found in S3: {}", fileName);
+                return ResponseEntity.status(404).body(
+                    new ErrorResponse("Document not found", "The document for policy " + policyNumber + " is not available yet.")
+                );
+            }
+
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
