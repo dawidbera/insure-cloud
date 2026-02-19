@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestTemplate;
 
@@ -40,6 +41,7 @@ public class SecurityConfig {
      * @return A configured RestTemplate.
      */
     @Bean
+    @LoadBalanced
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
         return builder
             .setConnectTimeout(java.time.Duration.ofSeconds(5))

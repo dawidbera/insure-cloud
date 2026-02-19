@@ -1,11 +1,12 @@
 package com.insurecloud.document;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public record PolicyIssuedEvent(
-    UUID policyId,
-    String policyNumber,
-    String customerId,
-    BigDecimal premiumAmount
+    @JsonProperty("policyId") UUID policyId,
+    @JsonProperty("policyNumber") String policyNumber,
+    @JsonProperty("customerId") String customerId,
+    @JsonProperty("premiumAmount") BigDecimal premiumAmount
 ) {}

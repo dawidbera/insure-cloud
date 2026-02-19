@@ -5,11 +5,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
@@ -19,33 +22,40 @@ public class DocumentInitializer {
     private final DocumentGenerator documentGenerator;
     private final S3Template s3Template;
     private final RestTemplate restTemplate;
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
     private static final String BUCKET_NAME = "policy-documents";
-    private static final String POLICY_SERVICE_URL = "http://policy-service:8081/api/policies";
+    private static final String POLICY_SERVICE_URL = "http://policy-service/api/policies";
 
     /**
      * Initialize documents for existing policies after application has been fully registered.
-     * This ensures that the service is UP in Eureka before we run the initialization.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void initializeDocumentsForExistingPolicies() {
-        log.info("Scheduling document initialization for existing policies");
-        
-        // Schedule with a delay to ensure Eureka registration completes
         Thread.startVirtualThread(() -> {
             try {
-                Thread.sleep(3000); // Wait 3 seconds for Eureka registration
+                log.info("Waiting for discovery service to stabilize before document sync...");
+                TimeUnit.SECONDS.sleep(15);
                 performInitialization();
             } catch (InterruptedException e) {
-                log.error("Document initialization was interrupted", e);
                 Thread.currentThread().interrupt();
             }
         });
     }
 
     /**
+     * Periodic check to ensure all policies have documents.
+     */
+    @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.MINUTES)
+    public void scheduledSync() {
+        if (!initialized.get()) {
+            performInitialization();
+        }
+    }
+
+    /**
      * Performs the actual document initialization.
      */
-    private void performInitialization() {
+    public synchronized void performInitialization() {
         log.info("Starting document initialization for existing policies");
         
         try {
@@ -86,6 +96,7 @@ public class DocumentInitializer {
             }
             
             log.info("Document initialization complete. Successfully generated: {}", successCount);
+            initialized.set(true);
         } catch (Exception e) {
             log.error("Failed to initialize documents for existing policies", e);
         }
