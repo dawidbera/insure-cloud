@@ -128,7 +128,6 @@ services:
       - "8443:8443"
     environment:
       - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
-      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
@@ -153,7 +152,6 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
@@ -177,7 +175,6 @@ services:
       - SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED=false
       - SPRING_CLOUD_VAULT_URI=http://vault:8200
       - SPRING_DATA_REDIS_HOST=redis
-      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
@@ -200,7 +197,6 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
@@ -223,7 +219,6 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
@@ -247,7 +242,6 @@ services:
       - AWS_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - EUREKA_SERVER=http://admin:password@discovery-service:8761/eureka/
       - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/insure-cloud
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/insure-cloud/protocol/openid-connect/certs
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans

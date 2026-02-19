@@ -19,7 +19,7 @@ vault kv put secret/application \
     spring.cloud.aws.sqs.endpoint=http://localstack:4566 \
     spring.cloud.aws.sns.endpoint=http://localstack:4566 \
     spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak:8080/realms/insure-cloud \
-    eureka.client.serviceUrl.defaultZone=http://discovery-service:8761/eureka/
+    eureka.client.serviceUrl.defaultZone=http://admin:password@discovery-service:8761/eureka/
 
 ########################################### API GATEWAY (secret/api-gateway) ##########################################
 vault kv put secret/api-gateway \
