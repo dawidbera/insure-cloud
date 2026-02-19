@@ -15,10 +15,22 @@ spring:
 eureka:
   instance:
     hostname: discovery-service
+    lease-expiration-duration-in-seconds: 30
   client:
     registerWithEureka: false
     fetchRegistry: false
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
   server:
+    enable-self-preservation: true
+    renewal-percent-threshold: 0.85
+    eviction-interval-timer-in-ms: 60000
     wait-time-in-ms-when-sync-empty: 0
+    number-of-replication-retries: 3
+    max-threads-for-peer-replication: 20
+    min-threads-for-peer-replication: 5
+
+logging:
+  level:
+    com.netflix.eureka: DEBUG
+    com.netflix.discovery: DEBUG

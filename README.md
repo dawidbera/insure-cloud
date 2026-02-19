@@ -25,104 +25,81 @@ InsureCloud is a microservices-based system designed to handle the full lifecycl
 
 ## 🏗 Architecture & Request Flow
 
-The system utilizes a centralized **API Gateway**, **Service Discovery**, and an **Identity Provider (Keycloak)** to ensure secure, resilient, and manageable communication. A **Zero-Trust** security model is enforced, where every service validates JWT tokens and checks RBAC roles using the shared `common-security` library. Secrets and sensitive configurations are managed centrally via **HashiCorp Vault**.
+The system utilizes a centralized **API Gateway**, **Service Discovery**, and an **Identity Provider (Keycloak)** to ensure secure, resilient, and manageable communication. While a **Zero-Trust** security model is implemented (JWT/RBAC), for **development purposes, security has been simplified (permitAll)** to allow immediate testing and exploration without complex authentication steps. Secrets and sensitive configurations are managed centrally via **HashiCorp Vault**.
 
 ### Microservices Architecture & Request Flow Diagram
 ```mermaid
-graph TB
-    Client[Client / Frontend]
+graph TD
+    User((User / Browser))
     
-    subgraph "Identity, Access & Secrets"
-        Keycloak[Keycloak: 8088]
-        Vault[HashiCorp Vault: 8200]
-        CS[common-security: lib]
+    subgraph Frontend_Layer
+        IF[insure-frontend: Angular + Nginx]
     end
-
-    subgraph "Control Plane"
-        Eureka[Discovery Service: Eureka]
-    end
-
-    subgraph "Observability"
-        Prometheus[Prometheus: 9090]
-        Grafana[Grafana: 3000]
-        Zipkin[Zipkin: 9411]
-    end
-
-    subgraph "Service Layer (Synchronous & Resilient)"
-        direction TB
-        PS[Policy Service: 8081]
-        QS[Quote Service: 8082]
-        SS[Search Service: 8085]
-        DS[Document Service: 8084]
-        NS[Notification Service: 8083]
-        
-        subgraph "Internal Logic Patterns"
-            CB{Circuit Breaker}
-            Fallback[Fallback Handler]
-            QS_STRAT[Strategy Pattern: Car/Home/Life]
-        end
-    end
-
-    %% Auth & Routing
-    Client -->|1. Authenticate| Keycloak
-    Client -->|2. Request + JWT| GW[API Gateway: 8080]
     
-    GW <-->|Fetch Routes| Eureka
-    GW -.->|Validate JWT| Keycloak
-    GW -->|Route| PS & QS & SS & DS & NS
-
-    %% Secrets Flow
-    PS & QS & SS & DS & NS & GW -.->|Fetch Secrets| Vault
-
-    %% Security & Validation
-    PS & QS & SS & DS & NS -.->|Validate JWT via| CS
-    CS -.->|Map Roles| Keycloak
-
-    %% Inter-service Flow
-    PS -- "QuoteClient" --> CB
-    CB -->|Allowed| QS
-    CB -.->|Open/Fallback| Fallback
-    Fallback -.-> PS
+    subgraph Gateway_Layer
+        AG[api-gateway: Spring Cloud Gateway]
+    end
     
-    QS -.->|Premium Strategy| QS_STRAT
-
-    %% Persistence
-    QS -->|Cache| Redis[(Redis)]
-    PS -->|PostgreSQL| DB_PG[(Transactional Outbox)]
-    PS -->|Audit Log| DB_DYNAMO[(DynamoDB)]
+    subgraph Discovery_&_Config
+        ED[discovery-service: Eureka]
+        HV[vault: HashiCorp Vault]
+        KC[keycloak: Identity Provider]
+    end
     
-    subgraph "Event-Driven Layer (Asynchronous)"
-        direction LR
-        Outbox[Outbox Processor]
-        SNS[AWS SNS: Topic]
-        SQS[SQS Queues]
+    subgraph Business_Services
+        PS[policy-service]
+        QS[quote-service]
+    end
+    
+    subgraph Event_Driven_Services
+        DS[document-service]
+        SS[search-service]
+        NS[notification-service]
+    end
+    
+    subgraph Infrastructure
+        PDB[(PostgreSQL)]
+        RDB[(Redis)]
+        ES[(Elasticsearch)]
+        LS[localstack: S3, SQS, SNS, DynamoDB]
+    end
+    
+    subgraph Monitoring
+        PR[Prometheus]
+        GR[Grafana]
+        ZP[Zipkin]
     end
 
-    DB_PG -.->|Polling| Outbox
-    Outbox -->|Publish| SNS
-    SNS -->|Fan-out| SQS
+    User -->|HTTPS :4200| IF
+    IF -->|HTTPS :8443| AG
     
-    SQS -.->|Consume| NS & DS & SS
-
-    subgraph "LocalStack (AWS Emulation)"
-        S3[S3: policy-documents]
-        SES[SES: Notifications]
-    end
-
-    NS -->|Send| SES
-    DS -->|Upload PDF| S3
-    SS -->|Index| ES[(Elasticsearch)]
-
-    subgraph "API Documentation"
-        Swagger[Swagger UI Aggregator]
-        GW -->|Expose: 8080/swagger-ui.html| Swagger
-        Swagger -.->|Aggregate OpenAPI| PS & QS & SS & DS & NS
-    end
-
-    %% Observability
-    PS & QS & SS & DS & NS & GW -.->|Metrics| Prometheus
-    PS & QS & SS & DS & NS & GW -.->|Traces| Zipkin
-    Prometheus -.-> Grafana
+    AG -->|Sync| PS
+    AG -->|Sync| QS
+    AG -->|Sync| SS
+    AG -->|Sync| DS
+    
+    PS <-->|Sync| QS
+    PS <--> LS
+    PS <--> PDB
+    
+    QS <--> RDB
+    
+    PS -.->|Async: SNS/SQS| LS
+    LS -.->|Async| DS
+    LS -.->|Async| SS
+    LS -.->|Async| NS
+    
+    DS <--> LS
+    SS <--> ES
+    
+    %% Discovery & Config
+    PS & QS & DS & SS & NS & AG -->|Register| ED
+    PS & QS & DS & SS & NS & AG -->|Fetch Config| HV
+    
+    %% Monitoring
+    PS & QS & DS & SS & NS & AG -.->|Metrics| PR
+    PS & QS & DS & SS & NS & AG -.->|Trace| ZP
+    PR --> GR
 ```
 
 ## 🚦 Getting Started
@@ -146,8 +123,8 @@ docker compose up -d --build
 
 ### Verification & Testing
 
-#### 1. Obtain a Security Token
-Since the API is secured with Keycloak, you need a JWT token to call most endpoints. Use the provided helper script:
+#### 1. Obtain a Security Token (Optional)
+While security is currently set to `permitAll`, the infrastructure for Keycloak is fully functional. You can obtain a JWT token using the provided helper script:
 
 - **For Insurance Agent:** `./get-token.sh` (or `./get-token.sh AGENT`)
 - **For Admin:** `./get-token.sh ADMIN`
@@ -155,33 +132,33 @@ Since the API is secured with Keycloak, you need a JWT token to call most endpoi
 
 The script will output a `Bearer <token>` string.
 
-#### 2. Test the Flow via API Gateway (Port 8080)
-You can use the **Swagger UI** (`http://localhost:8080/swagger-ui.html`) or **curl**.
+#### 2. Test the Flow via API Gateway (Port 8443)
+You can use the **Swagger UI** (`https://localhost:8443/swagger-ui.html`) or **curl**.
 
 1. **Calculate a Quote:**
 ```bash
-curl -X POST http://localhost:8080/api/quotes \
+curl -X POST https://localhost:8443/api/quotes \
   -H "Content-Type: application/json" \
   -d '{"productCode": "CAR_INSURANCE", "customerAge": 25, "assetValue": 50000}'
 ```
 
 2. **Issue a Policy:**
 ```bash
-curl -X POST http://localhost:8080/api/policies \
+curl -X POST https://localhost:8443/api/policies \
   -H "Content-Type: application/json" \
   -d '{"policyNumber": "POL-123", "customerId": "CUST-001", "premiumAmount": 500.00, "startDate": "2026-02-16", "endDate": "2027-02-16"}'
 ```
 
 3. **Check Search Index:**
 ```bash
-curl http://localhost:8080/api/search/by-number?policyNumber=POL-123
+curl https://localhost:8443/api/search/by-number?policyNumber=POL-123
 ```
 
 ### 📈 API Documentation & Monitoring
 Once the services are running, you can access the tools:
 
 #### API Documentation
-- **Centralized API Docs:** `http://localhost:8080/swagger-ui.html`
+- **Centralized API Docs (via Gateway):** `https://localhost:8443/swagger-ui.html`
 
 #### Web Application
 - **InsureCloud Frontend (Angular):** `http://localhost:4200`

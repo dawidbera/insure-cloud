@@ -36,6 +36,25 @@ spring:
 server:
   port: 8085
 
+eureka:
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:search-service}
+    prefer-ip-address: true
+    ip-address: ${EUREKA_INSTANCE_IP:}
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://discovery-service:8761/eureka/}
+    registry-fetch-interval-seconds: 10
+    eureka-server-read-timeout-seconds: 30
+    eureka-server-connect-timeout-seconds: 10
+
 # Logging configuration
 logging:
   pattern:

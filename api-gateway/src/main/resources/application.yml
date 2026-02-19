@@ -91,10 +91,22 @@ springdoc:
         url: /v3/api-docs/notification-service
 
 eureka:
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:api-gateway}
+    prefer-ip-address: true
+    ip-address: ${EUREKA_INSTANCE_IP:}
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+    health-check-url-path: /actuator/health
+    status-page-url-path: /actuator/info
   client:
-    registry-fetch-interval-seconds: 5
-    serviceUrl:
-      defaultZone: ${eureka.client.serviceUrl.defaultZone}
+    registry-fetch-interval-seconds: 10
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER:http://discovery-service:8761/eureka/}
+    eureka-server-read-timeout-seconds: 30
+    eureka-server-connect-timeout-seconds: 10
 
 management:
   endpoints:
